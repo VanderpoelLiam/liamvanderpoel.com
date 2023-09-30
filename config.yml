@@ -17,3 +17,13 @@ menu:
       name: Contact
       url: /contact/
       weight: 30
+
+params:
+    defaultTheme: auto
+    disableThemeToggle: true
+    homeInfoParams:
+      Title: Site under construction
+      Content: No content for now...
+    socialIcons: 
+      - name: "github"
+        url: "https://github.com/VanderpoelLiam"
