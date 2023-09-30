@@ -1,4 +1,19 @@
 baseURL: "https://liamvanderpoel.com/"
 languageCode: en-us
-title: My New Hugo Site
+title: "Liam van der Poel"
 theme: PaperMod
+
+menu:
+  main:
+    - identifier: projects
+      name: Projects
+      url: /projects/
+      weight: 10
+    - identifier: reference
+      name: Reference
+      url: /reference/
+      weight: 20
+    - identifier: contact
+      name: Contact
+      url: /contact/
+      weight: 30
