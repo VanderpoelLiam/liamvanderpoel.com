@@ -27,3 +27,4 @@ params:
     socialIcons: 
       - name: "github"
         url: "https://github.com/VanderpoelLiam"
+    ShowCodeCopyButtons: true
