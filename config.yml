@@ -1,7 +1,7 @@
 baseURL: "https://liamvanderpoel.com/"
 languageCode: en-us
 title: "Liam van der Poel"
-theme: PaperMod
+theme: Solaria
 
 menu:
   main:
