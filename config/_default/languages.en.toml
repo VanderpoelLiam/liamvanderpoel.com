@@ -16,7 +16,7 @@ title = "Liam van der Poel"
  [author]
    name = "Liam van der Poel"
 #   image = "img/blowfish_logo.png"
-#   headline = "I'm only human"
+   headline = "Hi, I'm Liam. I'm a NLP Research Engineer working in Zürich."
    bio = "NLP Research Engineer at Telepathy Labs"
    links = [
 #     { email = "mailto:hello@your_domain.com" },
