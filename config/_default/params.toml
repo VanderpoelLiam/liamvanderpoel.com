@@ -10,7 +10,7 @@ defaultAppearance = "light" # valid options: light or dark
 autoSwitchAppearance = true
 
 enableSearch = true
-enableCodeCopy = false
+enableCodeCopy = true
 
 # mainSections = ["section1", "section2"]
 # robots = ""
@@ -47,7 +47,7 @@ disableTextInHeader = false
   layoutBackgroundBlur = false # only used when layout equals background
 
 [article]
-  showDate = true
+  showDate = false
   showViews = false
   showLikes = false
   showDateUpdated = false
@@ -66,7 +66,7 @@ disableTextInHeader = false
   showPagination = true
   invertPagination = false
   showReadingTime = false
-  showTableOfContents = false
+  showTableOfContents = true
   # showRelatedContent = false
   # relatedContentLimit = 3
   showTaxonomies = false
@@ -86,7 +86,7 @@ disableTextInHeader = false
   showLikes = false
   showTableOfContents = false
   showCards = false
-  groupByYear = true
+  groupByYear = false
   cardView = false
   cardViewScreenWidth = false
   constrainItemsWidth = false

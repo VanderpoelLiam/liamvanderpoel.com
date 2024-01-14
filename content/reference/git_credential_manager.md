@@ -10,13 +10,13 @@ year: "2023"
 month: "2023/10"
 ---
 
-# What problem does this address?
+## What problem does this address?
 I want a simple way to push/pull code from GitHub without having to enter my password or username.
 
-# Setup
+## Setup
 The installation instructions are adapted from those in the [git credential manager repository](https://github.com/git-ecosystem/git-credential-manager). 
 
-## Download git-credential-manager
+### Download git-credential-manager
 
 Download the latest .deb package, and run the following:
 ```
@@ -24,7 +24,7 @@ sudo dpkg -i <path-to-package>
 git-credential-manager configure
 ```
 
-## Select credential store
+### Select credential store
 There were a few options for how to store credentials. I went with [the GPG/pass approach](https://github.com/git-ecosystem/git-credential-manager/blob/main/docs/credstores.md). To select this store:
 ```
 git config --global credential.credentialStore gpg
