@@ -2,4 +2,4 @@
 title: "Reference"
 draft: false
 ---
-Reference page.
+This is where I write down things I have learned.
