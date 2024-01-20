@@ -3,9 +3,16 @@ title: "Cookiecutter"
 date: 2023-10-05T14:38:46+02:00
 draft: false
 ---
-[Cookiecutter](https://github.com/cookiecutter/cookiecutter) is a tool to create projects from templates. The plan is to create my own cookicutter for how I like to have my Python package projects setup.
+## Summary
+This post details how I created the [cookiecutter-python](https://github.com/VanderpoelLiam/cookiecutter-python) template. To create a new project, install the [Cookiecutter](https://github.com/cookiecutter/cookiecutter) and run:
+```
+cookiecutter gh:/VanderpoelLiam/cookiecutter-python
+```
+You can then follow the detailed instructions in the README of the new project. See the [cookiecutter-python README](https://github.com/VanderpoelLiam/cookiecutter-python#readme) for more details.
 
 ## Writing our own cookiecutter
+[Cookiecutter](https://github.com/cookiecutter/cookiecutter) is a tool to create projects from templates. The plan is to create my own cookicutter for how I like to have my Python package projects setup.
+
 ### First steps
 To begin I followed the [installation instructions](https://cookiecutter.readthedocs.io/en/stable/installation.html#install-cookiecutter) from the [cookiecutter documentation](https://cookiecutter.readthedocs.io/). The steps I ran were the following.
 
@@ -225,20 +232,13 @@ foundations-of-psychohistory
     └── __init__.py
 ```
 
-## Conclusion
-We have created the [cookiecutter-python](https://github.com/VanderpoelLiam/cookiecutter-python) template. To create a new project, run 
-```
-cookiecutter gh:/VanderpoelLiam/cookiecutter-python
-```
-then follow the instructions in the README of the new project.
-
 
 ## References
-### Cookiecutters 
+Cookiecutters 
 1. [Cookiecutter PyPackage fork](https://github.com/briggySmalls/cookiecutter-pypackage/tree/master)
 2. [Hypermodern Python Cookiecutter Template](https://github.com/cjolowicz/cookiecutter-hypermodern-python)
 3. [Cookiecutter Tutorial](https://cookiecutter.readthedocs.io/en/stable/tutorials/tutorial2.html#)
 
-### Project structure
+Project structure
 1. [Hypermodern Python Blog](https://cjolowicz.github.io/posts/hypermodern-python-01-setup/)
 2. [Hypermodern Python Repository](https://github.com/cjolowicz/hypermodern-python)
