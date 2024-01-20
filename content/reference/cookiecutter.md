@@ -1,5 +1,5 @@
 ---
-title: "Cookiecutter"
+title: "Python Cookiecutter"
 date: 2023-10-05T14:38:46+02:00
 draft: false
 ---
