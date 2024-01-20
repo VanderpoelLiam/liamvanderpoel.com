@@ -4,7 +4,7 @@ date: 2023-10-05T14:38:46+02:00
 draft: false
 ---
 ## Summary
-This post details how I created the [cookiecutter-python](https://github.com/VanderpoelLiam/cookiecutter-python) template. To create a new project, install the [Cookiecutter](https://github.com/cookiecutter/cookiecutter) and run:
+This post details how I created the [cookiecutter-python](https://github.com/VanderpoelLiam/cookiecutter-python) template. To create a new project, install [Cookiecutter](https://github.com/cookiecutter/cookiecutter) and run:
 ```
 cookiecutter gh:/VanderpoelLiam/cookiecutter-python
 ```
