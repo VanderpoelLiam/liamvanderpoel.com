@@ -20,13 +20,13 @@ pipx install cookiecutter
 Next I created a new repository [cookiecutter-python](https://github.com/VanderpoelLiam/cookiecutter-python) and cloned it to my local machine. 
 
 ### Basic cookiecutter for src layout
-Let us now create a basic cookiecutter that just has the directory structure we want to have in our python package. I am following [this turorial](https://cookiecutter.readthedocs.io/en/stable/tutorials/tutorial2.html#) and the src layout structure outlined in [this guide](https://cjolowicz.github.io/posts/hypermodern-python-01-setup/). We want the following structure when we initialise a project called `Python Template`:
+Let us now create a basic cookiecutter that just has the directory structure we want to have in our python package. I am following [this turorial](https://cookiecutter.readthedocs.io/en/stable/tutorials/tutorial2.html#) and the src layout structure outlined in [this guide](https://cjolowicz.github.io/posts/hypermodern-python-01-setup/). We want the following structure when we initialise a project called `Foundations Of Psychohistory`:
 ```
-python-template
+foundations-of-psychohistory
 ├── README.md
 ├── src
-│   └── python_template
-│       └── __init__.py
+│   └── foundations_of_psychohistory
+│       └── __init__.py
 └── tests
     └── __init__.py
 ```
@@ -54,7 +54,7 @@ Then create the following directory structure:
 
 i.e. run the commands `mkdir {{cookiecutter.project_slug}}; touch {{cookiecutter.project_slug}}/README.md; etc ...`. 
 
-Add brief descriptions to th init files and the README: 
+Add brief descriptions to the init files and the README: 
 `src/{{cookiecutter.package_name}}/__init__.py`:
 ```
 """{{cookiecutter.project_name}}."""
@@ -68,7 +68,7 @@ Add brief descriptions to th init files and the README:
 `README.md`:
 ```
 # {{cookiecutter.project_name}}
-Project created by {author}.
+Project created by {{cookiecutter.author}}.
 ```
 
 Push the changes to the repository, and we are ready to create our first project.
@@ -95,7 +95,7 @@ foundations-of-psychohistory
     └── __init__.py
 ```
 
-## What features to include in the template?
+## Including additional features
 I am basing my template mainly off the [Hypermodern Python Cookiecutter Template](https://github.com/cjolowicz/cookiecutter-hypermodern-python). However I only want the following features:
 * Packaging and dependency management with [Poetry](https://python-poetry.org/)
 * Linting with [pre-commit](https://pre-commit.com/) and [Flake8](https://flake8.pycqa.org/en/latest/)
@@ -103,34 +103,16 @@ I am basing my template mainly off the [Hypermodern Python Cookiecutter Template
 * Import sorting with [isort](https://pycqa.github.io/isort/)
 * Testing with [pytest](https://docs.pytest.org/en/latest/)
 
-### Requirements
-Update the `README.md` with the installation requirements to create a new project:
-````
-## Requirements
-(Reccomended) Install [pyenv](https://github.com/pyenv/pyenv) to manage Python versions:
-```
-curl https://pyenv.run | bash
-```
+Therefore I made the following additions to the template.
 
-Install [pipx](https://github.com/pypa/pipx):
-```
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
-```
-
-Install [Cookiecutter](https://github.com/cookiecutter/cookiecutter):
-```
-pipx install cookiecutter
-```
-
-Install [Poetry](https://python-poetry.org/)
-```
-pipx install poetry
-```
-````
+### Detailed README instructions
+The README.md file contains detailed instructions on how to use the tools included in the template once you have created a new project. The main sections are:
+* [Prerequisites](https://github.com/VanderpoelLiam/cookiecutter-python/blob/master/%7B%7Bcookiecutter.project_slug%7D%7D/README.md#prerequisites)
+* [Installation](https://github.com/VanderpoelLiam/cookiecutter-python/blob/master/%7B%7Bcookiecutter.project_slug%7D%7D/README.md#installation)
+* [Usage](https://github.com/VanderpoelLiam/cookiecutter-python/blob/master/%7B%7Bcookiecutter.project_slug%7D%7D/README.md#usage)
 
 ### Configuration files
-Create the `setup.cfg` file that stores the configurations for flake8, isort and darglint. Any pytest configurations would also go here.
+The `setup.cfg` file stores the configurations for flake8, isort and darglint. Any pytest configurations would also go here.
 
 `setup.cfg`:
 ```
@@ -151,10 +133,10 @@ profile = black
 strictness = short
 ```
 
-I use the default Python `.gitignore` provided by Github. 
+I use the default Python `.gitignore` provided by Github with the `pyenv` and `poetry` sections uncommented. 
 
 ### pre-commit hooks
-Create the `pre-commit` file that runs before every commit to identify simple issues, lint and format the code.
+The `pre-commit` file that runs before every commit to identify simple issues, lint and format the code.
 
 `.pre-commit-config.yaml`:
 ```
@@ -190,39 +172,14 @@ repos:
     -   id: darglint
 ```
 
-### Development environment
-Update the `README.md` with the development environment setup instructions.
-````
-## Development environment (reccomended)
-We reccomend this approach for managing the development environment.
-
-Install Python 3.10.12:
-```
-pyenv install 3.10.12
-```
-
-Create a new virtualenv:
-```
-pyenv virtualenv 3.10.12 {{cookiecutter.package_name}}
-```
-
-Set this to the default Python environment inside the repository:
-```
-pyenv local {{cookiecutter.package_name}}
-```
-````
-
-### Project creation
-Update the `README.md` with the project creation instructions. For clarity, I provide the below instructions with the fields filled in i.e. instead of {{cookiecutter.project_name}} I fill in `Foundations Of Psychohistory`.
-````
-## Create a new project
-Example usage:
+## Project creation
+To create a new project with the default name `Foundations Of Psychohistory`, run:
 ```
 ❯ cookiecutter gh:/VanderpoelLiam/cookiecutter-python 
-  [1/4] project_name (Foundations Of Psychohistory): Foundations Of Psychohistory
-  [2/4] project_slug (foundations-of-psychohistory): foundations-of-psychohistory
-  [3/4] package_name (foundations_of_psychohistory): foundations_of_psychohistory
-  [4/4] author (Hari Seldon): Hari Seldon
+  [1/4] project_name (Foundations Of Psychohistory): 
+  [2/4] project_slug (foundations-of-psychohistory): 
+  [3/4] package_name (foundations_of_psychohistory): 
+  [4/4] author (Hari Seldon): 
 
 ❯ cd foundations-of-psychohistory 
 
@@ -249,26 +206,32 @@ Example usage:
 # Install pre-commit
 ❯ poetry run pre-commit install
 ```
-````
+This installation assumes you have the [prerequisites installed](#first-steps). 
 
-## Final structure
-Following the sample instructions in [project creation section](#project-creation) will result in the following directory structure:
-TODO: incorrect directiory structure
+This will result in the following directory structure:
 ```
-{{cookiecutter.project_slug}}
+foundations-of-psychohistory
+├── .gitignore
+├── poetry.lock
+├── .pre-commit-config.yaml
+├── pyproject.toml
+├── .python-version
 ├── README.md
+├── setup.cfg
 ├── src
-│   └── {{cookiecutter.package_name}}
-│       └── __init__.py
-├── tests
-│  └── __init__.py
-│
-└── setup.cfg
+│   └── foundations_of_psychohistory
+│       └── __init__.py
+└── tests
+    └── __init__.py
 ```
 
-# TODO:
-* Link the the accompanying cookie cutter template I create
-* Fix issue with .precommit-config.yaml not being copied over
+## Conclusion
+We have created the [cookiecutter-python](https://github.com/VanderpoelLiam/cookiecutter-python) template. To create a new project, run 
+```
+cookiecutter gh:/VanderpoelLiam/cookiecutter-python
+```
+then follow the instructions in the README of the new project.
+
 
 ## References
 ### Cookiecutters 
