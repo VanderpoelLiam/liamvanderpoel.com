@@ -2,12 +2,6 @@
 title: "Git Credential Manager"
 date: 2023-10-03T19:58:56+02:00
 draft: false
-tags:
-- git
-TocOpen: true
-ShowToc: true
-year: "2023"
-month: "2023/10"
 ---
 
 ## What problem does this address?
