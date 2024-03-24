@@ -21,7 +21,7 @@ title = "Liam van der Poel"
    links = [
 #     { email = "mailto:hello@your_domain.com" },
      { github = "https://github.com/VanderpoelLiam"},
-#     { linkedin = "https://linkedin.com/in/username" },
+     { linkedin = "https://www.linkedin.com/in/liam-van-der-poel-0bb7b2106/" },
 #     { researchgate = "https://www.researchgate.net/profile/username" },
 #     { ko-fi = "https://ko-fi.com/username" },
    ]
