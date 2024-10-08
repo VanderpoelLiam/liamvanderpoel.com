@@ -19,9 +19,6 @@ title = "Liam van der Poel"
    headline = "Hi, I'm Liam. I'm a Machine Learning Engineer working in Zürich."
    # bio = "NONE"
    links = [
-#     { email = "mailto:hello@your_domain.com" },
      { github = "https://github.com/VanderpoelLiam"},
      { linkedin = "https://www.linkedin.com/in/liam-van-der-poel-0bb7b2106/" },
-#     { researchgate = "https://www.researchgate.net/profile/username" },
-#     { ko-fi = "https://ko-fi.com/username" },
    ]
