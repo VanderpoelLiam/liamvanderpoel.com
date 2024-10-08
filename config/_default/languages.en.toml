@@ -13,11 +13,11 @@ title = "Liam van der Poel"
   # description = "My awesome website"
   # copyright = "Copy, _right?_ :thinking_face:"
 
- [author]
+[params.author]
    name = "Liam van der Poel"
 #   image = "img/blowfish_logo.png"
-   headline = "Hi, I'm Liam. I'm a NLP Research Engineer working in Zürich."
-   bio = "NLP Research Engineer at Telepathy Labs"
+   headline = "Hi, I'm Liam. I'm a Machine Learning Engineer working in Zürich."
+   # bio = "NONE"
    links = [
 #     { email = "mailto:hello@your_domain.com" },
      { github = "https://github.com/VanderpoelLiam"},
