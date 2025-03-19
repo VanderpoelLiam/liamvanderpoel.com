@@ -1,7 +1,7 @@
 ---
 title: "Prompt Optimization with DSPy"
 date: 2025-03-04T18:47:37+01:00
-draft: true
+draft: false
 ---
     
 ## Language model program optimization
@@ -165,7 +165,7 @@ Now that we have a way to generate prompt templates containing automatically gen
 Simplified descriptions of the algorithms for [BootstrapFewShot](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/bootstrap.py#L36) and [BootstrapFewShotWithRandomSearch](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/random_search.py#L26) are described in [the original DSPy paper](https://openreview.net/pdf?id=sY5N0zY5Od) in appendices H.1 and H.2. Further information is also available at [DSPy Optimizers (formerly Teleprompters)](https://dspy.ai/learn/optimization/optimizers/)
 ## MIPRO
 
-![[TODO: Add MIPRO diagram]]
+![The MIPRO optimizer](mipro-diagram.png "[The MIPRO optimizer](https://arxiv.org/pdf/2406.11695). In Step 1, demonstrations are bootstrapped using the same process from Step 1 of Bootstrap Random Search. In Step 2, instructions are proposed using the grounding strategy described in 3.1. In Step 3, Bayesian optimization is used to find the best performing combination of instruction and demonstration candidates.")
 
 ### Bootstrap demonstrations
 Run [BootstrapFewShot](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/bootstrap.py#L36) as described in the previous section to get candidate sets of demonstrations. 
