@@ -7,32 +7,7 @@ draft: false
   
 ## Language model program optimization
 
-<!-- ![[TODO: Add general optimization algorithm diagram or get below latex code to render]]
-```
-\usepackage{algorithm}
-\usepackage{algorithmic}
-
-\begin{algorithm}[H]
-\caption{Optimize $\Phi$ with optimizer $M$}
-\label{alg:optimize}
-\begin{algorithmic}[1]
-\Require Optimizer $M$, Initial Program $\Phi$, Metric $\mu$
-\Require Max Iterations $I$, Training Data $\mathcal{D}$
-\Require Minibatch size $B$, Proposer Hyperparameters $\theta$
-\Ensure Optimized version of $\Phi$
-\State $M.\text{Initialize}(\mathcal{D}, \theta)$ \Comment{Initialize optimizer using the data}
-\For{$k \gets 1$ to $I$}
-    \State $(\mathcal{V} \to S_k) \gets M.\text{Propose}(\theta)$ \Comment{Generate proposal}
-    \State $\mathcal{D}_k \gets \{(x_j, x_j') \sim \mathcal{D}\}_{j=1}^B$ \Comment{Sample size-$B$ batch}
-    \State $\sigma \gets \frac{1}{B} \sum_{(x, x') \in \mathcal{D}_k} \mu(\Phi_{\mathcal{V} \to S_k}(x), x')$ \Comment{Validate updated program}
-    \State $M.\text{Update}(\mathcal{V} \to S_k, \sigma)$ \Comment{Update optimizer based on the observed validation score}
-\EndFor
-\State $(\mathcal{V} \to S_k) \gets M.\text{ExtractOptimizedSets}()$
-\State \Return $\Phi_{\mathcal{V} \to S}$
-\end{algorithmic}
-\end{algorithm}
-```
-TODO: Would like to render algorithms nicely using https://github.com/SaswatPadhi/pseudocode.js -->
+![General Optimization Algorithm](general-optimization-algorithm.png "[General algorithm for language model program optimization](https://arxiv.org/pdf/2406.11695).")
 
 Let's consider the task [HotpotQA](https://hotpotqa.github.io/) where we want to answer a question using two relevant passages retrieved from Wikipedia articles. An example from the dev set is given below:
 
