@@ -3,10 +3,11 @@ title: "Prompt Optimization with DSPy"
 date: 2025-03-04T18:47:37+01:00
 draft: false
 ---
+{{< katex >}}
     
 ## Language model program optimization
 
-![[TODO: Add general optimization algorithm diagram or get below latex code to render]]
+<!-- ![[TODO: Add general optimization algorithm diagram or get below latex code to render]]
 ```
 \usepackage{algorithm}
 \usepackage{algorithmic}
@@ -31,7 +32,7 @@ draft: false
 \end{algorithmic}
 \end{algorithm}
 ```
-TODO: Would like to render algorithms nicely using https://github.com/SaswatPadhi/pseudocode.js
+TODO: Would like to render algorithms nicely using https://github.com/SaswatPadhi/pseudocode.js -->
 
 Lets consider the task [HotpotQA](https://hotpotqa.github.io/)  where we want to answer a question using two relevant passages retrieved from Wikipedia articles. An example from the dev set is given below:
 
@@ -42,7 +43,7 @@ Lets consider the task [HotpotQA](https://hotpotqa.github.io/)  where we want to
 | **Question**           | What type of profession do Dave Pirner and Les McKeown both have?                                                                                                                                                     |
 | **Answer**             | Singer                                                                                                                                                                                                                |
 
- A program $\Phi$ to solve the task is given below. The two modules $m_1$ and $m_2$ are `generate_query` and `generate_answer` respectively, which are parameterized by their internal prompt templates $p_1, p_2$. 
+ A program \\(\Phi\\) to solve the task is given below. The two modules \\(m_1\\) and \\(m_2\\) are `generate_query` and `generate_answer` respectively, which are parameterized by their internal prompt templates \\(p_1, p_2\\). 
 
 ```python
 class MultiHop(dspy.Module):
@@ -63,7 +64,7 @@ class MultiHop(dspy.Module):
 This step is quite optimizer specific. At the minimum it passes hyperparameter information to the optimizer. This is also where we would generate bootstrapped examples.
 
 ### Generate a proposal using the optimizer
-Each prompt template $p_i$ has a set of variables (open slots) that we fill in before passing the final prompt to the LLM. The collection $\mathcal{V} \to S_k$ means the prompt templates we use at the $k^{th}$ iteration of our optimization loop. For example we might use this template for the `generate_answer` module:
+Each prompt template \\(p_i\\) has a set of variables (open slots) that we fill in before passing the final prompt to the LLM. The collection \\(\mathcal{V} \to S_k\\) means the prompt templates we use at the \\(k^{th}\\) iteration of our optimization loop. For example we might use this template for the `generate_answer` module:
 
 ```python
 f"""
@@ -81,13 +82,16 @@ Answer:
 """
 ```
 
-This generation procedure is specific to the optimizer $M$ and the hyperparameters $\theta$.
+This generation procedure is specific to the optimizer \\(M\\) and the hyperparameters \\(\theta\\).
 ### Sample a batch
-Pretty straightforward, sample $B$ examples from our dataset in order to compute a validation score.
+Pretty straightforward, sample \\(B\\) examples from our dataset in order to compute a validation score.
 ### Validate updated program
-The score for a particular example $(x, x')$ is $\mu(\Phi_{\mathcal{V} \to S_k}(x), x')$. An example in this setting is a question/answer pair, not including the golden retrieved paragraphs. For our program a metric $\mu$ that makes sense is exact match, i.e. are the answers exactly equal. $\Phi_{\mathcal{V} \to S_k}$ means our program with the  $k^{th}$ version of all our prompt templates. So in words $\sigma \gets \frac{1}{B} \sum_{(x, x') \in \mathcal{D}_k} \mu(\Phi_{\mathcal{V} \to S_k}(x), x')$ is how well the $k^{th}$ version of our program performs wrt on the examples in batch $B$
+The score for a particular example \\((x, x')\\) is \\(\mu(\Phi_{\mathcal{V} \to S_k}(x), x')\\). An example in this setting is a question/answer pair, not including the golden retrieved paragraphs. For our program a metric \\(\mu\\) that makes sense is exact match, i.e. are the answers exactly equal. \\(\Phi_{\mathcal{V} \to S_k}\\) means our program with the  \\(k^{th}\\) version of all our prompt templates. So in words: 
+$$\sigma \leftarrow \frac{1}{B} \sum\limits_{(x, x') \in \mathcal{D}_k} \mu\left(\Phi^{(k)}(x), x'\right)$$
 
-Interesting to note is that the validation score is computed on the program level and not on the module level as the metric only looks at the program output $x'$. This is why although we have access to the golden retrieved passages, we do not compare the actual retrieved passages and use this information to update the optimizer. This limitation is explicitly stated in [the paper](https://arxiv.org/pdf/2406.11695) as "the metric $\mu$ provides supervision only at the level of the entire task, so every variable in $V$ is latent".
+is how well the \\(k^{th}\\) version of our program performs wrt on the examples in batch \\(B\\). Here \\(\Phi^{(k)}\\) is shorthand for \\(\Phi_{\mathcal{V} \to S_k}\\).
+
+Interesting to note is that the validation score is computed on the program level and not on the module level as the metric only looks at the program output \\(x'\\). This is why although we have access to the golden retrieved passages, we do not compare the actual retrieved passages and use this information to update the optimizer. This limitation is explicitly stated in [the paper](https://arxiv.org/pdf/2406.11695) as "the metric \\(\mu\\) provides supervision only at the level of the entire task, so every variable in \\(V\\) is latent".
 ### Update optimizer based on the observed validation score
 This is also very optimizer specific, but at a high level we want to update the way we propose new prompt templates given the validation score on the current set of prompts.
 ### Extract optimized sets
@@ -98,10 +102,11 @@ This step of the algorithm is to update the program with the "best" prompt templ
 
 ### Bootstrapping without random search
 
-Bootstrapping few shot examples requires we specify the number of demonstrations we want to generate, then for each example $(x, x')$ in the shuffled training set run the example through our unoptimized program to get a predicted output $\Phi(x)$. We then include an example $(x, \Phi(x))$ as a bootstrapped demonstration if it is "good enough" as measured by our metric, i.e.  $\mu(\Phi(x), x') \geq \lambda$ for some threshold $\lambda$. 
+Bootstrapping few shot examples requires we specify the number of demonstrations we want to generate, then for each example \\((x, x')\\) in the shuffled training set run the example through our unoptimized program to get a predicted output \\(\Phi(x)\\). We then include an example \\((x, \Phi(x))\\) as a bootstrapped demonstration if it is "good enough" as measured by our metric, i.e.  \\(\mu(\Phi(x), x') \geq \lambda\\) for some threshold \\(\lambda\\). 
 
-Bootstrapping is most useful when our training set does not have labels, i.e. we have $x$ and not $(x, x')$. The metric $\mu$ is implemented in such cases as a conditional function, for example for the HotpotQA task it might be:
-$$
+Bootstrapping is most useful when our training set does not have labels, i.e. we have \\(x\\) and not \\((x, x')\\). The metric \\(\mu\\) is implemented in such cases as a conditional function, for example for the HotpotQA task it might be:
+
+$$ 
 \mu(\Phi(x), x') =
 \begin{cases} 
 \Phi(x) == x', & \text{if } x' \text{ is present}, \\
@@ -109,7 +114,7 @@ $$
 \end{cases}
 $$
 
-Where the function $\text{FactuallyCorrect}(x, \Phi(x))$ is some function that determines the quality of the predicted output, this can even be a call to a LLM. In the DSPy framework this might look something like:
+Where the function \\(\text{FactuallyCorrect}(x, \Phi(x))\\) is some function that determines the quality of the predicted output, this can even be a call to a LLM. In the DSPy framework this might look something like:
 
 ```python
 # Define the signature for automatic assessments.
@@ -170,7 +175,7 @@ Simplified descriptions of the algorithms for [BootstrapFewShot](https://github.
 ### Bootstrap demonstrations
 Run [BootstrapFewShot](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/bootstrap.py#L36) as described in the previous section to get candidate sets of demonstrations. 
 ### Propose instruction candidates
-Using a 'proposer' LLM based program we can generate candidate instructions for $\Phi$. The one used in DSPy looks like:
+Using a 'proposer' LLM based program we can generate candidate instructions for \\(\Phi\\). The one used in DSPy looks like:
 ```python
 class GenerateSingleModuleInstruction(dspy.Signature):
     """
@@ -231,7 +236,7 @@ study = optuna.create_study(direction="maximize", sampler=sampler)
 study.optimize(objective, n_trials=num_trials)
 ```
 
-The [objective function](https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/mipro_optimizer_v2.py#L502) is the the average metric over all data in the training set i.e. $\frac{1}{|\mathcal{D}|} \sum_{(x, x') \in \mathcal{D}} \mu(\Phi_{\mathcal{V} \to S}(x), x')$. Important to note that if $x'$ is not provided, we need to ensure that our metric can still return a score even without a ground truth label. For example, we would need to update the metric described in [Bootstrapping without random search](#bootstrapping-without-random-search) to handle the case where `example.answer` is missing:
+The [objective function](https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/mipro_optimizer_v2.py#L502) is the the average metric over all data in the training set i.e. \\(\frac{1}{|\mathcal{D}|} \sum_{(x, x') \in \mathcal{D}} \mu(\Phi_{\mathcal{V} \to S}(x), x')\\). Important to note that if \\(x'\\) is not provided, we need to ensure that our metric can still return a score even without a ground truth label. For example, we would need to update the metric described in [Bootstrapping without random search](#bootstrapping-without-random-search) to handle the case where `example.answer` is missing:
 ```python
 def validate_answer(example, pred, trace=None):
 	factually_correct = dspy.Predict(AssessFactuality)
@@ -255,7 +260,7 @@ In any case, one interesting side-effect of the 0-shot MIPRO++ approach is it al
 ## References
 1. [Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs](https://arxiv.org/pdf/2406.11695)
 2. [DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines](https://openreview.net/pdf?id=sY5N0zY5Od)
-3. [TextGrad: Automatic “Differentiation” via Text](https://arxiv.org/pdf/2406.07496)
+3. [TextGrad: Automatic "Differentiation" via Text](https://arxiv.org/pdf/2406.07496)
 4. [Demonstrate–Search–Predict: Composing retrieval and language models for knowledge-intensive NLP](https://arxiv.org/pdf/2212.14024)
 5. [DSPy Assertions: Computational Constraints for Self-Refining Language Model Pipelines](https://arxiv.org/pdf/2312.13382)
 6. [Algorithms for Hyper-Parameter Optimization](https://proceedings.neurips.cc/paper_files/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf)
