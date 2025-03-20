@@ -92,11 +92,10 @@ This step of the algorithm is to update the program with the "best" prompt templ
 Bootstrapping few shot examples requires we specify the number of demonstrations we want to generate, then for each example \\((x, x')\\) in the shuffled training set run the example through our unoptimized program to get a predicted output \\(\Phi(x)\\). We then include an example \\((x, \Phi(x))\\) as a bootstrapped demonstration if it is "good enough" as measured by our metric, i.e. \\(\mu(\Phi(x), x') \geq \lambda\\) for some threshold \\(\lambda\\). 
 
 Bootstrapping is most useful when our training set does not have labels, i.e. we have \\(x\\) and not \\((x, x')\\). The metric \\(\mu\\) is implemented in such cases as a conditional function, for example for the HotpotQA task it might be:
-
-$$ 
+$$
 \mu(\Phi(x), x') =
-\begin{cases} 
-\Phi(x) == x', & \text{if } x' \text{ is present}, \\
+\begin{cases}
+\Phi(x) == x', & \text{if } x' \text{ is present}, \\\\
 \text{FactuallyCorrect}(x, \Phi(x)), & \text{otherwise }
 \end{cases}
 $$
