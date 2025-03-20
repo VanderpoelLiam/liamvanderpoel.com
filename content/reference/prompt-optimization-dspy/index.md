@@ -249,8 +249,8 @@ def validate_answer(example, pred, trace=None):
 ### MIPRO++
 In vanilla MIPRO our Bayesian model has two categorical parameters: 1) An instruction 2) A set of demonstrations. However the MIPRO++ variant suggests instead directly optimizing the  proposal hyperparameters, i.e. to include a given input field or not, as well as the demonstrations. However the authors do not run any experiments with full MIPRO++ rather only the 0-shot variation where they optimize the instruction only. In [section 4.4 of the paper](https://arxiv.org/pdf/2406.11695) they specify which input fields they include which confusingly states one of the variables as "selects a specific set of bootstrapped demos to show to the proposer LM (categorical)". My understanding is these demonstrations are only included to guide the instruction generation LM and are not included in the output. But it is such a natural step to have the including the demonstrations in the output as another categorical variable I am a bit puzzled why the authors do not include this. The code for MIPRO++ (or the 0-shot variant) is not provided anywhere. Very puzzling.
 
-In any case, one interesting side-effect of the 0-shot MIPRO++ approach is it allows us to see the learned importance scores from the Bayesian model e.g [Figure 6](https://arxiv.org/pdf/2406.11695)
-![[TODO: Add MIPRO++ diagram]]
+In any case, one interesting side-effect of the 0-shot MIPRO++ approach is it allows us to see the learned importance scores from the Bayesian model e.g Figure 6:
+![Learned hyperparameter importances for HotpotQA](hyperparameter-importances.png "[Figure 6: Learned hyperparameter importances for HotpotQA.](https://arxiv.org/pdf/2406.11695). Here we see that the set of demonstrations chosen for the meta-prompt were most important for proposal quality.")
 
 ## References
 1. [Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs](https://arxiv.org/pdf/2406.11695)
