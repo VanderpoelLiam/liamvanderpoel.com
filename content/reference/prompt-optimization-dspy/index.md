@@ -4,12 +4,37 @@ date: 2025-03-04T18:47:37+01:00
 draft: false
 ---
 {{< katex >}}
+
+This is my attempt to understand the main ideas behind prompt optimization with the [DSPy framework](https://dspy.ai/). In particular I focus on the paper [Optimizing Instructions and Demonstrations for Multi-Stage Language Model Program](https://arxiv.org/pdf/2406.11695).
   
 ## Language model program optimization
 
-![General Optimization Algorithm](general-optimization-algorithm.png "[General algorithm for language model program optimization](https://arxiv.org/pdf/2406.11695).")
+A language model (LM) program is a large language model (LLM) and associated code that leverages the LM to solve a specific task. For example you might want to perform sentiment classification with on [IMBD reviews](https://huggingface.co/datasets/stanfordnlp/imdb). So you pick a suitible LLM, maybe Llama 3.1, and prompt it with `Classify the sentiment of a the following movie review as positive or negative.`, followed by a review. You might then need to do some post-processing to ensure that the model does not ramble and only outputs a sentiment. You are now faced with two potential problems:
 
-Let's consider the task [HotpotQA](https://hotpotqa.github.io/) where we want to answer a question using two relevant passages retrieved from Wikipedia articles. An example from the dev set is given below:
+1. How do you write modular programs that are easy to modify and are not dependent on the specifics of our LLM choice?
+
+2. How do we pick our prompts to achieve the best performance possible for a given LLM and task?
+
+With DSPy you deal with the first problem by defining modules which specify inputs/outputs effectively decoupling the task (program in DSPy speak) from your model. For example:
+
+```python
+from typing import Literal
+
+class Classify(dspy.Signature):
+    """Classify sentiment of a movie review."""
+
+    sentence: str = dspy.InputField()
+    sentiment: Literal['positive', 'negative'] = dspy.OutputField()
+
+classify = dspy.Predict(Classify)
+classify(sentence="The Lord of the Rings: The Fellowship of the Ring was the best movie ever")
+```
+
+The second problem is more complex. The general approach is given by the following algorithm.
+
+![General Optimization Algorithm](general-optimization-algorithm.png "General algorithm for language model program optimization.")
+
+The two key elements are the optimizer and the metric. The optimizer decides how to tune the prompt, and the metric tells us the quality of a response. To explain this algorithm in concrete terms, let's consider the task [HotpotQA](https://hotpotqa.github.io/) where we want to answer a question using two relevant passages retrieved from Wikipedia articles. An example from the dev set is given below:
 
 |                        |                                                                                                                                                                                                                       |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -18,7 +43,7 @@ Let's consider the task [HotpotQA](https://hotpotqa.github.io/) where we want to
 | **Question**           | What type of profession do Dave Pirner and Les McKeown both have?                                                                                                                                                     |
 | **Answer**             | Singer                                                                                                                                                                                                                |
 
-A program \\(\Phi\\) to solve the task is given below. The two modules \\(m_1\\) and \\(m_2\\) are `generate_query` and `generate_answer` respectively, which are parameterized by their internal prompt templates \\(p_1, p_2\\). 
+A program \\(\Phi\\) to solve the task needs to retrieve relevant articles from Wikipedia, then it needs to answer the question given the information in those articels. The [paper](https://arxiv.org/pdf/2406.11695) proposes decoposing the program into two modules \\(m_1\\) and \\(m_2\\) (`generate_query` and `generate_answer` respectively) which are parameterized by their internal prompt templates \\(p_1, p_2\\). The full program looks like:
 
 ```python
 class MultiHop(dspy.Module):
@@ -37,7 +62,7 @@ class MultiHop(dspy.Module):
 
 ### Initialize the optimizer using the data
 
-This step is quite optimizer specific. At the minimum it passes hyperparameter information to the optimizer. This is also where we would generate bootstrapped examples.
+Following the algorithm above, we would next initialize the optimizer. I will postpose explaining this step until after we discuss how optimizers work as the details of this are quite optimizer specific. At the minimum it passes hyperparameter information to the optimizer. This is also where we would generate bootstrapped examples.
 
 ### Generate a proposal using the optimizer
 
@@ -59,15 +84,15 @@ Answer:
 """
 ```
 
-This generation procedure is specific to the optimizer \\(M\\) and the hyperparameters \\(\theta\\).
+This generation procedure is specific to the optimizer \\(M\\) and the hyperparameters \\(\theta\\), but with the above example you could imagine it might tweak the first sentence `Given the following context answer the question.` or add examaples of what sucessfully answering a question looks like.
 
 ### Sample a batch
 
-Pretty straightforward, sample \\(B\\) examples from our dataset in order to compute a validation score.
+Pretty straightforward, randomly pick \\(B\\) examples from our dataset on which to compute a validation score. This is \\(\mathcal{D}_k\\) at the \\(k^{th}\\) step.
 
 ### Validate updated program
 
-The score for a particular example \\((x, x')\\) is \\(\mu(\Phi_{\mathcal{V} \to S_k}(x), x')\\). An example in this setting is a question/answer pair, not including the golden retrieved paragraphs. For our program a metric \\(\mu\\) that makes sense is exact match, i.e. are the answers exactly equal. \\(\Phi_{\mathcal{V} \to S_k}\\) means our program with the  \\(k^{th}\\) version of all our prompt templates. So in words 
+The score for a particular example \\((x, x')\\) is \\(\mu(\Phi_{\mathcal{V} \to S_k}(x), x')\\), where \\((x, x')\\) is question/answer pair (not including the golden retrieved paragraphs). A suitible choice of metric \\(\mu\\) is exact match, i.e. are the answers exactly equal. The notation \\(\Phi_{\mathcal{V} \to S_k}\\) means our program with the  \\(k^{th}\\) version of all our prompt templates. So in words
 
 $$\sigma \leftarrow \frac{1}{B} \sum\limits_{(x, x') \in \mathcal{D}_k} \mu\left(\Phi^{(k)}(x), x'\right)$$
 
@@ -81,15 +106,17 @@ This is also very optimizer specific, but at a high level we want to update the 
 
 ### Extract optimized sets
 
-This step of the algorithm is to update the program with the "best" prompt templates. Usually taking the proposed templates with highest validation score.
+This step of the algorithm is to update the program with the "best" prompt templates. Usually just by taking the proposed templates with highest validation score.
 
 ## Optimizer specifics
+
+Let's now get in to the specifics of how various [DSPy optimizers](https://dspy.ai/learn/optimization/optimizers/) improve the prompts.
 
 ### Bootstrap Demonstrations with Random Search
 
 #### Bootstrapping without random search
 
-Bootstrapping few shot examples requires we specify the number of demonstrations we want to generate, then for each example \\((x, x')\\) in the shuffled training set run the example through our unoptimized program to get a predicted output \\(\Phi(x)\\). We then include an example \\((x, \Phi(x))\\) as a bootstrapped demonstration if it is "good enough" as measured by our metric, i.e. \\(\mu(\Phi(x), x') \geq \lambda\\) for some threshold \\(\lambda\\). 
+Bootstrapping is the process of turning unsupervised data into supervised data by having our program generate its own labels. To start we need to pick the number of demonstrations we want to generate, then for each example \\((x, x')\\) in the shuffled training set, run it through our unoptimized program to get a predicted output \\(\Phi(x)\\). We then include an example \\((x, \Phi(x))\\) as a bootstrapped demonstration if it is "good enough" as measured by our metric, i.e. \\(\mu(\Phi(x), x') \geq \lambda\\) for some threshold \\(\lambda\\).
 
 Bootstrapping is most useful when our training set does not have labels, i.e. we have \\(x\\) and not \\((x, x')\\). The metric \\(\mu\\) is implemented in such cases as a conditional function, for example for the HotpotQA task it might be:
 $$
@@ -153,13 +180,15 @@ This corresponds to [BootstrapFewShot](https://github.com/stanfordnlp/dspy/blob/
 
 #### Random search over bootstrapped few-shot programs
 
-Now that we have a way to generate prompt templates containing automatically generated few-shot examples. All the random search does is generate a set of candidate programs with shuffled training data and various numbers of few-shot examples, then selects the best performing candidate. This is [BootstrapFewShotWithRandomSearch](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/random_search.py#L26) in DSPy. 
+Now that we have a way to generate prompt templates containing automatically generated few-shot examples. All the random search does is generate a set of candidate programs with shuffled training data and various numbers of few-shot examples, then selects the best performing candidate. This is [BootstrapFewShotWithRandomSearch](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/random_search.py#L26) in DSPy.
 
 Simplified descriptions of the algorithms for [BootstrapFewShot](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/bootstrap.py#L36) and [BootstrapFewShotWithRandomSearch](https://github.com/stanfordnlp/dspy/blob/b1ae7af5261a5201d080b57aea248cd09d76e666/dspy/teleprompt/random_search.py#L26) are described in [the original DSPy paper](https://openreview.net/pdf?id=sY5N0zY5Od) in appendices H.1 and H.2. Further information is also available at [DSPy Optimizers (formerly Teleprompters)](https://dspy.ai/learn/optimization/optimizers/).
 
 ### MIPRO
 
-![The MIPRO optimizer](mipro-diagram.png "[The MIPRO optimizer](https://arxiv.org/pdf/2406.11695). In Step 1, demonstrations are bootstrapped using the same process from Step 1 of Bootstrap Random Search. In Step 2, instructions are proposed using the grounding strategy described in 3.1. In Step 3, Bayesian optimization is used to find the best performing combination of instruction and demonstration candidates.")
+Optimization using MIPRO is a 3 stage process described in the figure below:
+
+![The MIPRO optimizer](mipro-diagram.png "The MIPRO optimizer. In Step 1, demonstrations are bootstrapped using the same process from Step 1 of Bootstrap Random Search. In Step 2, instructions are proposed using the grounding strategy described in 3.1. In Step 3, Bayesian optimization is used to find the best performing combination of instruction and demonstration candidates.")
 
 #### Bootstrap demonstrations
 
@@ -237,7 +266,13 @@ study = optuna.create_study(direction="maximize", sampler=sampler)
 study.optimize(objective, n_trials=num_trials)
 ```
 
-The [objective function](https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/mipro_optimizer_v2.py#L502) is the the average metric over all data in the training set i.e. \\(\frac{1}{|\mathcal{D}|} \sum_{(x, x') \in \mathcal{D}} \mu(\Phi_{\mathcal{V} \to S}(x), x')\\). Important to note that if \\(x'\\) is not provided, we need to ensure that our metric can still return a score even without a ground truth label. For example, we would need to update the metric described in [Bootstrapping without random search](#bootstrapping-without-random-search) to handle the case where `example.answer` is missing:
+The [objective function](https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/mipro_optimizer_v2.py#L502) is the the average metric over all data in the training set i.e.
+
+\\[
+\frac{1}{|\mathcal{D}|} \sum_{(x, x') \in \mathcal{D}} \mu(\Phi_{\mathcal{V} \to S}(x), x')
+\\]
+
+Important to note that if \\(x'\\) is not provided, we need to ensure that our metric can still return a score even without a ground truth label. For example, we would need to update the metric described in [Bootstrapping without random search](#bootstrapping-without-random-search) to handle the case where `example.answer` is missing. For example with:
 
 ```python
 def validate_answer(example, pred, trace=None):
@@ -253,18 +288,32 @@ def validate_answer(example, pred, trace=None):
     return example.answer == pred.answer
 ```
 
+In short, MIPRO is an extension of [Bootstrap Demonstrations with Random Search](#bootstrapping-without-random-search) that also does instruction optimization, using Bayesian optimization to search over few-shot example / instruction combinations.
+
 #### MIPRO++
 
-In vanilla MIPRO our Bayesian model has two categorical parameters:
+This is an extention to MIPRO proposed in [the paper](https://arxiv.org/pdf/2406.11695). In vanilla MIPRO our Bayesian model has two categorical parameters:
 
 1. An instruction
 2. A set of demonstrations
 
-However, the MIPRO++ variant suggests instead directly optimizing the proposal hyperparameters, i.e., to include a given input field or not, as well as the demonstrations. However, the authors do not run any experiments with full MIPRO++ rather only the 0-shot variation where they optimize the instruction only. In [section 4.4 of the paper](https://arxiv.org/pdf/2406.11695) they specify which input fields they include which confusingly states one of the variables as "selects a specific set of bootstrapped demos to show to the proposer LM (categorical)". My understanding is these demonstrations are only included to guide the instruction generation LM and are not included in the output. But it is such a natural step to have the including the demonstrations in the output as another categorical variable I am a bit puzzled why the authors do not include this. The code for MIPRO++ (or the 0-shot variant) is not provided anywhere. Very puzzling.
+However, the MIPRO++ variant suggests instead directly optimizing the proposal hyperparameters, i.e., to include a given input field or not, as well as the demonstrations. However, the authors do not run any experiments with full MIPRO++ rather only the 0-shot variation where they optimize the instruction only. In [section 4.4 of the paper](https://arxiv.org/pdf/2406.11695) they specify which input fields they include which confusingly states one of the variables as "selects a specific set of bootstrapped demos to show to the proposer LM (categorical)". My understanding is these demonstrations are only included to guide the instruction generation LM and are not included in the output. But it is such a natural step to have the including the demonstrations in the output as another categorical variable I am a bit puzzled why the authors do not include this. The code for MIPRO++ (or the 0-shot variant) is not provided anywhere (that I could find). Very puzzling.
 
 In any case, one interesting side-effect of the 0-shot MIPRO++ approach is it allows us to see the learned importance scores from the Bayesian model, e.g., Figure 6:
 
-![Learned hyperparameter importances for HotpotQA](hyperparameter-importances.png "[Figure 6: Learned hyperparameter importances for HotpotQA.](https://arxiv.org/pdf/2406.11695). Here we see that the set of demonstrations chosen for the meta-prompt were most important for proposal quality.")
+![Learned hyperparameter importances for HotpotQA](hyperparameter-importances.png "Figure 6: Learned hyperparameter importances for HotpotQA. Here we see that the set of demonstrations chosen for the meta-prompt were most important for proposal quality.")
+
+## Conclusion
+
+In conclusion, DSPy facilitates working with complicated multi-step langage programs by providing:
+
+1. **Modular Design**: We can break up large multi-step programs into smaller modules. This makes it easier to maintain the code and also decouples it from our choice of LLM. 
+
+2. **Automated Optimization**: All we need is a metric and a dataset. No need manually try out different prompts, its sufficient to describe the well as a DSPy Module and then DSPy handles the rest.
+
+3. **Flexible metrics**: The optimization works with supervised or unsupervised data. Bootstrapping is really powerful!
+
+I would like a greate choice of optimizers, and sometimes want more control over the meta-prompts used by the optimization process, but overall am happy with the current state of DSPy.
 
 ## References
 
