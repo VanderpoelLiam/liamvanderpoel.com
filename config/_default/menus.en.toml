@@ -4,8 +4,8 @@
 #  weight = 10
 
 [[main]]
-  name = "Reference"
-  pageRef = "reference"
+  name = "Archive"
+  pageRef = "archive"
   weight = 20
 
 # [[main]]
