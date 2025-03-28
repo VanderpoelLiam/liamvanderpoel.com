@@ -1,0 +1,6 @@
+<h2>References</h2>
+<ol>
+{{ range .Page.Scratch.Get "references" }}
+  <li><a href="{{ .url }}">{{ .text }}</a></li>
+{{ end }}
+</ol>

@@ -22,7 +22,7 @@ Reinforcement learning from human feedback (RLHF) aims to get a language model t
 1. Curate a dataset of preference data
 
 2. Train a reward model
-3. Use reinforcement learning (RL) "to optimize a language model policy to produce responses assigned high reward without drifting excessively far from the original model." [DPO paper](https://arxiv.org/pdf/2305.18290)
+3. Use reinforcement learning (RL) "to optimize a language model policy to produce responses assigned high reward without drifting excessively far from the original model." quote from [Direct Preference Optimization: Your Language Model is Secretly a Reward Model](https://arxiv.org/pdf/2305.18290)
 
 Step 1 is straightforward, given a prompt we generate completions and then have either a human or another LLM rank the completions in order of preference. The complexity of RLHF comes from steps 2 and 3.
 
@@ -58,9 +58,4 @@ $$
 
 The way we solve this optimization is through the use of policy-gradient reinforcement learning algorithms, such as PPO, GRPO and DPO.
 
-## References
-
-TODO: Want this to be automatically generated as any link in the article that I can then edit down (e.g. if multiple links for same website)
-[Direct Preference Optimization: Your Language Model is Secretly a Reward Model](https://arxiv.org/pdf/2305.18290)
-[Proximal Policy Optimization Algorithms](https://arxiv.org/pdf/1707.06347)
-[Fine-Tuning Language Models from Human Preferences](https://arxiv.org/pdf/1909.08593)
+{{< reflist >}}

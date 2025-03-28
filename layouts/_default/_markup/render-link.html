@@ -1,0 +1,15 @@
+{{- $refs := $.Page.Scratch.Get "references" | default slice -}}
+{{- $ref := dict "text" .Text "url" .Destination -}}
+{{- /* Only append if the URL doesn't exist yet */ -}}
+{{- $exists := false -}}
+{{- range $refs -}}
+  {{- if eq .url $ref.url -}}
+    {{- $exists = true -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $exists -}}
+  {{- $.Page.Scratch.Set "references" ($refs | append $ref) -}}
+{{- end -}}
+<a href="{{ .Destination | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}>
+  {{- .Text -}}
+</a> 
