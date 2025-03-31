@@ -6,6 +6,8 @@ draft: false
 
 {{< katex >}}
 
+The way I understand the origins of the current state of "AI" is that researchers realized that Large Language Models (LLMs) get really good at modeling language if you pre-train them on the whole internet with the goal of getting good at predicting the next token in a sequence. This idea was introduced by OpenAI in [Improving Language Understanding by Generative Pre-Training](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf). The goal of this pre-training step is that for each sequence of tokens in our training data e.g. `I love ramen!`, we are iteratively updating the model weights at each stage of decoding such that if we have the input `I love` we want to tweak the weights to encourage the model if it outputs `ramen` and punish it if it outputs anything else. However this approach does not get us to ChatGPT. The problem comes from the fact that during our pre-training, if you see the input `I love ramen!`, we encourage the model to output the `EOS` token and well stop generating. However the behavior we want to see is the model responding in some way to our input, e.g. when I told this to the current iteration of ChatGPT it responded `Nice! Do you have a favorite type? Tonkotsu, shoyu, miso, or something else?`. I want to explain how we get from a pre-trained language model to one that follows instructions (or tells me it won't answer my questions). Karpathy give a really good overview of the whole proccess in a youtube video that I want to include for completeness, but I'm interested in the specifics of the post-training stage: [Deep Dive into LLMs like ChatGPT](https://www.youtube.com/watch?v=7xTGNNLPyMI).
+
 ## Goal of RLHF
 
 Reinforcement learning from human feedback (RLHF) aims to get a language model to output text that aligns with a dataset of human preferences. One sample from the dataset would look like a tuple of strings ordered by human preference, where each string contains the same prompt but different assistant responses. The simplest form is a prompt-response pair, with one good response and one bad one, e.g. from the [HH-RLHF dataset](https://huggingface.co/datasets/Anthropic/hh-rlhf):
@@ -17,7 +19,7 @@ Reinforcement learning from human feedback (RLHF) aims to get a language model t
 
 ## How does RLHF work (overview)
 
-![[TODO: Add RLHF diagram]]
+![RLHF Overview](rlhf-diagram.png "Overview of Reinforcement Learning from Human Feedback.")
 
 1. Curate a dataset of preference data
 
