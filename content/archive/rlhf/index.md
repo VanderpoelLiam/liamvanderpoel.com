@@ -29,7 +29,7 @@ This is the key idea introduced by OpenAI in [Improving Language Understanding b
 
 The instruct version of the model is just the base model that has undergone additional training using both Supervised fine-tuning and Reinforcement Learning from Human Feedback (RLHF) to encourage to output responses that more helpful for users who are trying to ask the model questions and get answers in return. I will focus on the RLHF post-training stage, however Karpathy give a really good overview of the whole on his youtube channel: [Deep Dive into LLMs like ChatGPT](https://www.youtube.com/watch?v=7xTGNNLPyMI).
 
-## Overview of RLHF
+## Overview of Reinforcement Learning from Human Feedback
 
 ![RLHF Overview](rlhf-diagram.png "Overview of Reinforcement Learning from Human Feedback. Diagram from [Direct Preference Optimization: Your Language Model is Secretly a Reward Model](https://arxiv.org/pdf/2305.18290)")
 
@@ -63,7 +63,7 @@ But assuming we have an initialized \\(r_{\phi}(x, y)\\) and our preference data
 
 $$L_R(r_{\phi}, \mathcal{D}) = - \mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \log \sigma \big( r _{\phi}(x, y _w) - r _{\phi}(x, y _l) \big)$$
 
-## RL Fine-Tuning Phase
+## Reinforment Learning Fine-Tuning Phase
 
 At this stage we have a trained LM \\(\pi_{\theta}(y \mid x)\\) and a trained reward model \\(r_{\phi}(x, y)\\) our goal is to use RL to fine-tune the model to maximize the reward model's scores. A naive approach is to update our parameters \\(\theta\\) of our LM in order to maximize the reward function. However this leads to a collapse in the generalization ability of the LM as it suffers a mode collapse to high reward answers. Therefore is is important to also add a penalization term whenever the model deviates too much from the LM at the start of the RL fine-tuning stage, denoted \\(\pi_{\text{ref}}(y \mid x)\\).
 
