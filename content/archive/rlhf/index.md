@@ -6,7 +6,28 @@ draft: false
 
 {{< katex >}}
 
-The way I understand the origins of the current state of "AI" is that researchers realized that Large Language Models (LLMs) get really good at modeling language if you pre-train them on the whole internet with the goal of getting good at predicting the next token in a sequence. This idea was introduced by OpenAI in [Improving Language Understanding by Generative Pre-Training](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf). The goal of this pre-training step is that for each sequence of tokens in our training data e.g. `I love ramen!`, we are iteratively updating the model weights at each stage of decoding such that if we have the input `I love` we want to tweak the weights to encourage the model if it outputs `ramen` and punish it if it outputs anything else. However this approach does not get us to ChatGPT. The problem comes from the fact that during our pre-training, if you see the input `I love ramen!`, we encourage the model to output the `EOS` token and well stop generating. However the behavior we want to see is the model responding in some way to our input, e.g. when I told this to the current iteration of ChatGPT it responded `Nice! Do you have a favorite type? Tonkotsu, shoyu, miso, or something else?`. I want to explain how we get from a pre-trained language model to one that follows instructions (or tells me it won't answer my questions). Karpathy give a really good overview of the whole proccess in a youtube video that I want to include for completeness, but I'm interested in the specifics of the post-training stage: [Deep Dive into LLMs like ChatGPT](https://www.youtube.com/watch?v=7xTGNNLPyMI).
+## Unsupervised pre-training
+
+Let's say you want to replicate ChatGPT. The first step would be to train a language model from scratch on a lot of unsupervised data. A good starting point would be to take all the data on the internet from the [Common Crawl](https://commoncrawl.org/) which contains petabytes of data from billions of websites. You can look at a sample of the data [on Kaggle](https://www.kaggle.com/datasets/jyesawtellrickson/commoncrawl). I sampled a row at random and got [this blog](http://adayinthelifeofonegirl.blogspot.com/2012/04/garden-time.html) and the associated text:
+
+```text
+A Day in the Life of One Girl: Garden Time\nskip to main | skip to sidebar\nhome about me work with me outfits diy recipes\nApr 7, 2012\nGarden Time\nSpent time today enjoying the friends visiting in the garden\nsuccessfully planted some marigolds too!\non Saturday, April 07, 2012\nTags: garden, planting, spring [...]
+```
+
+You would clean, process and tokenise all this text to end up with corpus of tokens \\( X = \lbrace x_1, \dots, x_n \rbrace \\). This would be your training data for a (transformer based) neural network with parameters \\( \theta \\), where we aim to maximize the likelihood:
+\\[
+L(X) = \sum_i \log p(x_i \mid x_{i-k}, \dots, x_{i-1}; \theta)
+\\]
+
+where \\( k \\) is the size of the context window (i.e. how many previous tokens we use as context for our current token prediction). This objective is often called the standard languague modeling objective or maximizing the cross-entropy loss, and is optimized using some variant of stochastic gradient descent. The result of this training procedure is a distribution \\(p_{\theta}(\cdot \mid x)\\), where we can give some input text \\(x\\) like `I love` and our language model will predict a next token e.g. `coffee`.
+
+This is the key idea introduced by OpenAI in [Improving Language Understanding by Generative Pre-Training](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf). They found that training very big models on very big datsets result is very good performance on lots of NLP tasks that we care about. However these base models are not sufficient to have a ChatGPT like chatbot interface. These base models are only trained to be very good at language modelling, not following instructions or being helpful. You can see this difference yourself if you try asking the same question to both the base model [Llama-3.2-3B](https://huggingface.co/meta-llama/Llama-3.2-3B) and the instruction fine-tuned model [Llama-3.2-3B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct):
+
+|            | Llama-3.2-3B                                      | Llama-3.2-3B-Instruct |
+|-------------------|------------------------------------------------|--------------------------------|
+| **Question:** Do you love coffee? | **Response:** Do you love to travel? If you answered yes to both of these questions, then you’re in | **Response:** I don't have personal experiences, emotions, or preferences, including taste in coffee. However, I can provide information about coffee, its benefits, and brewing methods if you're interested! |
+
+The instruct version of the model is just the base model that has undergone additional training using both Supervised fine-tuning and Reinforcement Learning from Human Feedback (RLHF) to encourage to output responses that more helpful for users who are trying to ask the model questions and get answers in return. I will focus on the RLHF post-training stage, however Karpathy give a really good overview of the whole on his youtube channel: [Deep Dive into LLMs like ChatGPT](https://www.youtube.com/watch?v=7xTGNNLPyMI).
 
 ## Goal of RLHF
 
