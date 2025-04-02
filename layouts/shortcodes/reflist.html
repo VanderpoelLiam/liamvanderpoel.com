@@ -1,6 +1,22 @@
 <h2>References</h2>
 <ol>
-{{ range .Page.Scratch.Get "references" }}
-  <li><a href="{{ .url }}">{{ .text }}</a></li>
-{{ end }}
+{{- $exclude := .Get "exclude" | default "" -}}
+{{- $excludePatterns := slice -}}
+{{- if ne $exclude "" -}}
+  {{- $excludePatterns = split $exclude "," -}}
+{{- end -}}
+{{- $refs := .Page.Scratch.Get "references" | default slice -}}
+{{- range $refs -}}
+  {{- $refURL := .url -}}
+  {{- $skip := false -}}
+  {{- range $excludePatterns -}}
+    {{- $pattern := trim . " " -}}
+    {{- if findRE $pattern $refURL -}}
+      {{- $skip = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $skip -}}
+    <li><a href="{{ .url }}">{{ .text }}</a></li>
+  {{- end -}}
+{{- end -}}
 </ol>

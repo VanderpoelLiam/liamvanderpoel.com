@@ -1,5 +1,6 @@
 {{- $refs := $.Page.Scratch.Get "references" | default slice -}}
-{{- $ref := dict "text" .Text "url" .Destination -}}
+{{- $class := .Attributes.class | default "" -}}
+{{- $ref := dict "text" .Text "url" .Destination "class" $class -}}
 {{- /* Only append if the URL doesn't exist yet */ -}}
 {{- $exists := false -}}
 {{- range $refs -}}
@@ -10,6 +11,6 @@
 {{- if not $exists -}}
   {{- $.Page.Scratch.Set "references" ($refs | append $ref) -}}
 {{- end -}}
-<a href="{{ .Destination | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}>
+<a href="{{ .Destination | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ with .Attributes.class }} class="{{ . }}"{{ end }}>
   {{- .Text -}}
 </a> 

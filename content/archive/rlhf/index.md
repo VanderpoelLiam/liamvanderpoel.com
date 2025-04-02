@@ -81,4 +81,4 @@ TODO: Summarize process as:
 2. Train a reward model
 3. Use reinforcement learning (RL) "to optimize a language model policy to produce responses assigned high reward without drifting excessively far from the original model." quote from 
 
-{{< reflist >}}
+{{< reflist exclude="commoncrawl.org,kaggle.com,llama,huggingface.co/meta-llama,adayinthelifeofonegirl,huggingface.co/datasets" >}}
