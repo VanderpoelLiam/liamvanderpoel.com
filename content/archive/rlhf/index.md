@@ -45,9 +45,7 @@ Creating this dataset is relatively straightforward. Given a collection of promp
 
 The next step is to train a reward model from these preferences and use it to update the weights of our language model.
 
-## How do we train a reward model?
-
-### Reinforcement learning in the context of language modeling
+## Reinforcement learning in the context of language modeling
 
 As explained in the previous section, a LLM is a model of the form \\(p(y \mid x)\\), where \\(x\\) is the prompt and \\(y\\) is the response. The response \\(y\\) is generated autoregressively (i.e. one token at a time), so at the \\(n^{th}\\) stage of generation we are sampling
 \\[
@@ -74,9 +72,11 @@ In the pre-training stage, we initialize our policy \\(\pi = p\\). Often we supp
 \mathbb{E}_{\pi}[r] = \mathbb{E} _{x \sim D, y \sim \pi(\cdot \mid x) } [r(x, y)]
 \\]
 
-Given some dataset \\(D\\) of prompts. However due to the difficulty it writing such a reward model explicitly, e.g. we would need to understand why a human prefers one response to another, it is more straightforward to assume humans have a latent reward model we cannot directly access but that we have access to a data generated this model in the form of human preference datasets. Under such an assumption, we can break down the above optimization problem into first learning the reward model from human preference data, and then optimizing our policy to maximize the expected reward.
+where \\(D\\) is some dataset of representative prompts someone might ask our model. However due to the difficulty it writing such a reward model explicitly, e.g. we would need to understand why a human prefers one response to another, it is more straightforward to treat the reward model as latent and assume our preference dataset is sampled from this reward model. In other words, it is easier to ask annotators to rank responses to a prompt and then train a reward model on this data. 
 
-### Learning the reward model
+Under such an assumption, we can break down the above optimization problem into first learning the reward model from human preference data, and then optimizing our policy to maximize the expected reward.
+
+## Learning the reward model
 
 TODO: START HERE
 
@@ -97,6 +97,8 @@ $$
 $$
 
 The way we solve this optimization is through the use of policy-gradient reinforcement learning algorithms, such as PPO, GRPO and DPO.
+
+Say someting along the lines of: A major challenge of RLHf is how we solve the above optimization problem. That there are many proposed algorithms that all fall under the umbrella of polily-gradient RL algorithms. But that we leave the explanation of these algorithms to another article.
 
 For a more detailed look at the whole procedure, see the OpenAI paper [Fine-Tuning Language Models from Human Preferences.](https://arxiv.org/pdf/1909.08593)
 
