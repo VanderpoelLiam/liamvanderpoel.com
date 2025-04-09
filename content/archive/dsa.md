@@ -67,7 +67,7 @@ Implememted as `list` in Python.
 | Append item | `lst.append('a')` | O(1) |
 | Delete by index | `del lst[0]` | O(n) |
 | Remove first occurrence | `lst.remove(x)` | O(n) |
-| Check if element exists | `x in s` | O(n) |
+| Check if element exists | `x in lst` | O(n) |
 | Pop last item | `lst.pop()` | O(1) |
 | Pop item at index | `lst.pop(i)` | O(n) |
 
