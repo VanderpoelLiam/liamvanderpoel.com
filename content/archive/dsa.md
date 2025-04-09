@@ -17,7 +17,7 @@ tableOfContents:
 
 Reference for [time-complexiy of list, queue and set in python](https://wiki.python.org/moin/TimeComplexity).
 
-### Python range() Function
+### range()
 
 The function has the form `range(start, stop, step)`, see [docs](https://docs.python.org/2/library/functions.html#range). We go from start with increment step until the next step would exceed (or be less than for negative step) stop. Examples:
 
@@ -28,6 +28,32 @@ The function has the form `range(start, stop, step)`, see [docs](https://docs.py
 [0, 6]
 >>> list(range(5, 0, -1))
 [5, 4, 3, 2, 1]
+```
+
+### String slicing
+
+Similar to range for a string `s` we have `s[start:stop]` that goes includes the start element but not the stop element. Examples:
+
+```python
+>> s = "012345"
+>> s[0:2]
+"01"
+>> s[1:4]
+"123"
+>> s[3:]
+"345"
+>> s[:5]
+"01234"
+```
+
+Can optionally include a `step` i.e. `s[start:stop:step]` which increments the index by step each time. Examples:
+
+```python
+>> s = "012345"
+>> s[1:4:2]
+"13"
+>> s[::2]
+"024"
 ```
 
 ### Dynamic Arrays
