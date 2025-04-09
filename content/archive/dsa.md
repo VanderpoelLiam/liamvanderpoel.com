@@ -9,7 +9,69 @@ tableOfContents:
 
 ## Data Structures
 
-TODO.
+<!-- 1. Knowing the time and space complexity of each.
+
+2. Knowing how to implement them.
+
+3. Most importantly, knowing how to use them in your programming language of choice. -->
+
+Reference for [time-complexiy of list, queue and set in python](https://wiki.python.org/moin/TimeComplexity).
+
+### Python range() Function
+
+The function has the form `range(start, stop, step)`, see [docs](https://docs.python.org/2/library/functions.html#range). We go from start with increment step until the next step would exceed (or be less than for negative step) stop. Examples:
+
+```python
+>> list(range(0, 10, 2))
+[0, 2, 4, 6, 8]
+>>> list(range(0, 10, 6))
+[0, 6]
+>>> list(range(5, 0, -1))
+[5, 4, 3, 2, 1]
+```
+
+### Dynamic Arrays
+
+Implememted as `list` in Python.
+
+| Operation | Python | Time Complexity |
+|-----------|---------|-----------------|
+| Create empty list | `lst = []` | O(1) |
+| Create list with items | `lst = [1,2,3]` | O(n) |
+| Append item | `lst.append('a')` | O(1) |
+| Delete by index | `del lst[0]` | O(n) |
+| Remove first occurrence | `lst.remove(x)` | O(n) |
+| Check if element exists | `x in s` | O(n) |
+| Pop last item | `lst.pop()` | O(1) |
+| Pop item at index | `lst.pop(i)` | O(n) |
+
+### Linked Lists
+
+TODO
+
+### Stacks
+
+TODO
+
+### Queues
+
+TODO
+
+### Binary Trees
+
+TODO
+
+### Hash Maps / Sets
+
+TODO
+
+### Heaps
+
+TODO
+
+### Graphs
+
+TODO
 
 ## Algorithms
 
