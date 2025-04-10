@@ -159,3 +159,71 @@ The intuition is that the buckets contain the count as the key, and a list of el
 
 - Time complexity: \\(O(n)\\)
 - Space complexity: \\(O(n)\\)
+
+### Prefix sums
+
+Given an integer array `nums`, return an array output where `output[i]` is the product of all the elements of `nums` except `nums[i]`. The idea is to build two arrays of prefix / suffix products as the constraint is usually that you cannot take the product of all elements in `nums` as it is not guaranteed to fit into a 32-bit int.
+
+**Examples**
+
+```text
+Input: nums = [1,2,4,6]
+
+Output: [48,24,12,8]
+```
+
+```text
+Input: nums = [-1,0,1,2,3]
+
+Output: [0,-6,0,0,0]
+```
+
+**Code**
+
+```python
+def product_except_self(nums: List[int]) -> List[int]:
+    n = len(nums)
+
+    prefix = [1] * n
+    for i in range(1, n):
+        prefix[i] = nums[i-1] * prefix[i-1] 
+
+    suffix = [1] * n
+    for i in range(n-2, -1, -1):
+        suffix[i] = nums[i+1] * suffix[i+1]
+
+    res = []
+    for i in range(n):
+        res.append(prefix[i] * suffix[i])
+    return res
+```
+
+This has Time & Space Complexity:
+
+- Time complexity: \\(O(n)\\)
+- Space complexity: \\(O(n)\\)
+
+We can further reduce the space complexity by building the result in place i.e.:
+
+```python
+def product_except_self(nums: List[int]) -> List[int]:
+    n = len(nums)
+    res = [1] * n
+
+    prefix = 1
+    for i in range(1, n):
+        prefix = nums[i-1] * prefix
+        res[i] *= prefix
+
+    suffix = 1
+    for i in range(n-2, -1, -1):
+        suffix = nums[i+1] * suffix
+        res[i] *= suffix
+
+    return res
+```
+
+This would then have Time & Space Complexity:
+
+- Time complexity: \\(O(n)\\)
+- Space complexity: \\(O(1)\\) (as typically input / output are not counted in space complexity analysis, so we get to ignore the \\(O(n)\\) sized output array we use).
