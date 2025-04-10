@@ -203,7 +203,7 @@ This has Time & Space Complexity:
 - Time complexity: \\(O(n)\\)
 - Space complexity: \\(O(n)\\)
 
-We can further reduce the space complexity by building the result in place i.e.:
+We can further reduce the space complexity by building the result in place:
 
 ```python
 def product_except_self(nums: List[int]) -> List[int]:
