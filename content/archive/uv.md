@@ -1,10 +1,10 @@
 ---
-title: "uv Python Package Manager"
+title: "Setting Up a Python Project with uv"
 date: 2025-04-03T15:57:12+02:00
-draft: true
+draft: false
 ---
 
-Astral have created an incredible tool [uv](https://docs.astral.sh/uv/) that replaces the frankly terrible system I have been using to manage python versions, projects and virtual environments. The idea is to go through an example of setting up a repository managed by uv using [cookiecutter-uv](https://github.com/VanderpoelLiam/cookiecutter-uv).
+Astral have created an incredible tool [uv](https://docs.astral.sh/uv/) that replaces every other tool I have been using to manage python versions, projects and virtual environments. This article goes through an example of setting up a repository managed by uv using [cookiecutter-uv](https://github.com/VanderpoelLiam/cookiecutter-uv) and then highlights common use cases.
 
 ## Initial Setup
 
@@ -14,7 +14,7 @@ The prerequisite is that uv is installed, so follow the [installation instructio
 uvx cookiecutter https://github.com/VanderpoelLiam/cookiecutter-uv.git
 ```
 
-and follow the prompts to setup the repo. Note: This is all explained in the [cookiecutter-uv README](https://github.com/VanderpoelLiam/cookiecutter-uv). I picked all the default choices which resulted in the repository:
+and follow the prompts to setup the repo. Note: This is all explained in the [cookiecutter-uv README](https://github.com/VanderpoelLiam/cookiecutter-uv) so I won't go into details here. I picked all the default choices which resulted in the repository:
 
 ```shell
 > tree pg-doom/
@@ -37,7 +37,7 @@ pg-doom/
 └── tox.ini
 ```
 
-Then following the instructions in the newly created README, we first created the repository [pg-doom](https://github.com/VanderpoelLiam/pg-doom) on GitHub, then run:
+Then per the instructions in the newly created README, we create the repository [pg-doom](https://github.com/VanderpoelLiam/pg-doom) on GitHub, then run:
 
 ```shell
 git init -b main
@@ -47,7 +47,7 @@ git remote add origin git@github.com:VanderpoelLiam/pg-doom.git
 git push -u origin main
 ```
 
-It is normal that the GitHub Actions fail on this first push, that is because we need to create our lockfile. 
+It is normal that the GitHub Actions fail on this first push, that is because we need to create our lockfile with:
 
 ```shell
 make install
