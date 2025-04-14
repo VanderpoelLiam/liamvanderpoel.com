@@ -75,11 +75,48 @@ TODO
 
 ### Stacks
 
-TODO
+Stacks are LIFO (Last In, First Out). Implemented as lists, do `push(), pop()` using `append(), pop()`.
+
+```python
+stack = []
+
+stack.append(1) # stack = [1]
+stack.append(2) # stack = [1, 2]
+
+stack.pop()  # 2, stack = [1]
+
+top = stack[-1] # 1, stack = [1]
+```
+
+Note that as `deque` is a double-ended queue, we can add/remove from both ends in \\(O(1)\\) time. So we can also implement a stack as:
+
+```python
+from collections import deque
+
+stack = deque()
+
+stack.append(1) # stack = deque([1])
+stack.append(2) # stack = deque([1, 2])
+
+top_item = stack.pop() # 2, stack = deque([1])
+
+top = stack[-1] # 1, stack = deque([1])
+```
 
 ### Queues
 
-TODO
+Queues are FIFO (First In, First Out). Use `deque` implementation from `collections`, do `push(), pop()` using `append(), popleft()`.
+
+```python
+from collections import deque
+
+queue = deque()
+
+queue.append(1) # queue = deque([1])
+queue.append(2) # queue = deque([1, 2])
+
+queue.popleft()  # 1, queue = deque([2])
+```
 
 ### Binary Trees
 
