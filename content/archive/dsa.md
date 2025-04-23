@@ -136,11 +136,51 @@ TODO
 
 ## Algorithms
 
+### Backtracking
+
+General backtracking algorithm is the following:
+
+```python
+def backtrack(state):
+    if is_goal(state):
+        record_solution(state)
+        return
+
+    for choice in choices(state):
+        if is_valid(choice, state):
+            make_choice(choice, state)
+            backtrack(state)
+            undo_choice(choice, state)
+```
+
+**Time & Space Complexity:**
+
+- `n`: Depth of recursion / number of decisions
+- `b`: Branching factor (choices per step)
+
+**Time Complexity  \\(O(b^n)\\):**
+
+In the worst case, we explore all possible combinations of `b` choices at `n` levels:
+
+```text
+Level 0:        1 call
+Level 1:        b calls
+Level 2:        b^2 calls
+…
+Level n:        b^n calls
+```
+
+So in total we have \\(1 + b + b^2 + \dots + b^n\\). This is the sum of a geometric series which equals  \\(\frac{b^{n+1} - 1}{b - 1} = O(b^n)\\)
+
+**Space Complexity \\(O(n)\\):**
+
+The space required during execution is made up of the call stack and the current state. The call stack has size \\(O(n)\\) as it is can be up to the size of the maximum recursion depth. The size of the state depends on the specifics of the problem, but it is also usually of size \\(O(n)\\). This gives the total space complexity of \\(O(n)\\).
+
 ### Bucket Sort
 
 This algorithm is useful for problems where we want to get the \\(k\\) most frequent elements in a list.
 
-**Examples**
+**Examples:**
 
 ```text
 Input: nums = [1,2,2,3,3,3], k = 2
@@ -160,7 +200,7 @@ Input: nums = [4,1,-1,2,-1,2,3], k = 2
 Output: [-1,2]
 ```
 
-**Code**
+**Code:**
 
 ```python
 from collections import Counter, defaultdict
@@ -192,7 +232,7 @@ buckets = {1: [1, 3, 4], 2: [-1, 2]}
 
 The intuition is that the buckets contain the count as the key, and a list of elements with that count as the value. Creating the counts and buckets hash maps only takes \\(O(n)\\) time. We also will not use more than \\(O(n)\\) space as the largest key of the buckets dict is \\(n\\) if all elements in nums are the same, and all other keys are less than this value. All values of the buckets dict are just elements of nums, so we also cannot be larger than \\(O(n)\\) space due to the values of the buckets dict. Given the buckets dict, we can now get the top \\(k\\) elements by starting with the highest possible count and in decreasing order of counts, adding elements to our resulting list until we have \\(k\\) elements.
 
-**Time & Space Complexity**
+**Time & Space Complexity:**
 
 - Time complexity: \\(O(n)\\)
 - Space complexity: \\(O(n)\\)
@@ -201,7 +241,7 @@ The intuition is that the buckets contain the count as the key, and a list of el
 
 Given an integer array `nums`, return an array output where `output[i]` is the product of all the elements of `nums` except `nums[i]`. The idea is to build two arrays of prefix / suffix products as the constraint is usually that you cannot take the product of all elements in `nums` as it is not guaranteed to fit into a 32-bit int.
 
-**Examples**
+**Examples:**
 
 ```text
 Input: nums = [1,2,4,6]
@@ -215,7 +255,7 @@ Input: nums = [-1,0,1,2,3]
 Output: [0,-6,0,0,0]
 ```
 
-**Code**
+**Code:**
 
 ```python
 def product_except_self(nums: List[int]) -> List[int]:
