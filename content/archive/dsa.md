@@ -15,12 +15,46 @@ draft: false
 
 Reference for [time-complexity of list, queue and set in python](https://wiki.python.org/moin/TimeComplexity).
 
+### lists
+
+Take two lists `a = [1, 3, 2]` and `b = [200, 300, 100]`.
+
+#### Sorting
+
+```python
+>>> sorted(a)
+[1, 2, 3]
+>>> sorted(a, reverse=True)
+[3, 2, 1]
+>>> sorted(zip(a, b))
+[(1, 200), (2, 100), (3, 300)]
+>>> sorted(zip(a, b), key=lambda x: x[1])
+[(2, 100), (1, 200), (3, 300)]
+```
+
+#### Slicing
+
+The slicing operation for lists is identical to for strings, see [String slicing](#string-slicing). An important note is that slicing creates a shallow copy of the list. See [the docs](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) for more information.
+
+Common slicing operations for list are:
+
+```python
+>>> a[::-1] # Reversing a list
+[2, 3, 1]
+>>> c = a[:] # Shallow copy list
+>>> c[0] = -1
+>>> a
+[1, 3, 2]
+>>> c
+[-1, 3, 2]
+```
+
 ### range()
 
 The function has the form `range(start, stop, step)`, see [docs](https://docs.python.org/2/library/functions.html#range). We go from start with increment step until the next step would exceed (or be less than for negative step) stop. Examples:
 
 ```python
->> list(range(0, 10, 2))
+>>> list(range(0, 10, 2))
 [0, 2, 4, 6, 8]
 >>> list(range(0, 10, 6))
 [0, 6]
@@ -33,24 +67,24 @@ The function has the form `range(start, stop, step)`, see [docs](https://docs.py
 Similar to range for a string `s` we have `s[start:stop]` that goes includes the start element but not the stop element. Examples:
 
 ```python
->> s = "012345"
->> s[0:2]
+>>> s = "012345"
+>>> s[0:2]
 "01"
->> s[1:4]
+>>> s[1:4]
 "123"
->> s[3:]
+>>> s[3:]
 "345"
->> s[:5]
+>>> s[:5]
 "01234"
 ```
 
 Can optionally include a `step` i.e. `s[start:stop:step]` which increments the index by step each time. Examples:
 
 ```python
->> s = "012345"
->> s[1:4:2]
+>>> s = "012345"
+>>> s[1:4:2]
 "13"
->> s[::2]
+>>> s[::2]
 "024"
 ```
 
