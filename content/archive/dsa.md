@@ -15,7 +15,7 @@ draft: false
 
 Reference for [time-complexity of list, queue and set in python](https://wiki.python.org/moin/TimeComplexity).
 
-### lists
+### Lists
 
 Take two lists `a = [1, 3, 2]` and `b = [200, 300, 100]`.
 
