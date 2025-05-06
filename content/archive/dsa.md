@@ -170,6 +170,27 @@ TODO
 
 ## Algorithms
 
+### Binary Search
+
+Given a array of integers `nums` sorted in increasing order (e.g. `[-1, 0, 2, 3]`) and a target integer `target` we do binary search to find the index of the target as follows:
+
+```python
+def binary_search(nums, target):
+    n = len(nums)
+    l, r = 0, n-1
+    while l <= r:
+        m = l + (r - l) // 2
+        if nums[m] > target: # 
+            r = m - 1
+        elif nums[m] < target:
+            l = m + 1
+        else:
+            return m
+    return -1
+```
+
+Time complexity is \\(O(\log n)\\) as we halve the size of the array under consideration on each iteration of the while loop.
+
 ### Backtracking
 
 General backtracking algorithm is the following:
