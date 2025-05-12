@@ -191,6 +191,69 @@ def binary_search(nums, target):
 
 Time complexity is \\(O(\log n)\\) as we halve the size of the array under consideration on each iteration of the while loop.
 
+#### Rotated Arrays
+
+Problems where we want to find some value in an increasing array that has been sorted involves a binary search variant where the trick is understanding how to determine if the midpoint is to the right or left of the pivot. For example, given the array `[1, 2, 3, 4, 5]` the possible rotations are: `[1, 2, 3, 4, 5] -> [5, 1, 2, 3, 4] -> [4, 5, 1, 2, 3] -> [3, 4, 5, 1, 2] -> [2, 3, 4, 5, 1]`.
+
+Take the example `nums = [3, 4, 5, 1, 2]`, and start doing vanilla binary search:
+
+```shell
+[3, 4, 5, 1, 2]
+ l     m     r
+```
+
+Whenever the condition `nums[l] <= nums[m]` is met, this must mean we are to the left of the pivot or `m` is the pivot, for example:
+
+```shell
+[ 1,   2 ]
+ l=m   r
+
+nums[l] <= nums[m] == True
+```
+
+This is the key trick for problems such as `Find Minimum in Rotated Sorted Array` where the binary search conditions would be the following:
+
+```python
+if nums[l] <= nums[r]:
+    # nums[l:r] is sorted in increasing order
+    return nums[l]
+
+if nums[m-1] >= nums[m]:
+    # We are at the pivot
+    return nums[m]
+
+if nums[l] <= nums[m]:
+    # We are to the left of the pivot, go right
+    l = m + 1
+else:
+    # We are to the right of the pivot, go left
+    r = m - 1
+```
+
+For completeness the full algorithm would be:
+
+```python
+def find_min(nums):
+    n = len(nums)
+    l, r = 0, n-1
+    while l <= r:
+        m = l + (r - l) // 2
+    if nums[l] <= nums[r]:
+        # nums[l:r] is sorted in increasing order
+        return nums[l]
+
+    if nums[m-1] >= nums[m]:
+        # We are at the pivot
+        return nums[m]
+
+    if nums[l] <= nums[m]:
+        # We are to the left of the pivot, go right
+        l = m + 1
+    else:
+        # We are to the right of the pivot, go left
+        r = m - 1
+```
+
 ### Backtracking
 
 General backtracking algorithm is the following:
