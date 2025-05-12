@@ -179,7 +179,7 @@ def binary_search(nums, target):
     n = len(nums)
     l, r = 0, n-1
     while l <= r:
-        m = l + (r - l) // 2
+        m = (r+l) // 2
         if nums[m] > target: # 
             r = m - 1
         elif nums[m] < target:
@@ -193,7 +193,7 @@ Time complexity is \\(O(\log n)\\) as we halve the size of the array under consi
 
 #### Rotated Arrays
 
-Problems where we want to find some value in an increasing array that has been sorted involves a binary search variant where the trick is understanding how to determine if the midpoint is to the right or left of the pivot. For example, given the array `[1, 2, 3, 4, 5]` the possible rotations are: `[1, 2, 3, 4, 5] -> [5, 1, 2, 3, 4] -> [4, 5, 1, 2, 3] -> [3, 4, 5, 1, 2] -> [2, 3, 4, 5, 1]`.
+Problems where we want to find some value in an increasing array that has been sorted involves a binary search variant where the trick is understanding how to determine if the midpoint is to the right or left of the pivot, or if it is the pivot. As the array is in increasing order, the pivot is also the smallest value. For example, given the array `[1, 2, 3, 4, 5]` the possible rotations are: `[1, 2, 3, 4, 5] -> [5, 1, 2, 3, 4] -> [4, 5, 1, 2, 3] -> [3, 4, 5, 1, 2] -> [2, 3, 4, 5, 1]`.
 
 Take the example `nums = [3, 4, 5, 1, 2]`, and start doing vanilla binary search:
 
@@ -202,56 +202,61 @@ Take the example `nums = [3, 4, 5, 1, 2]`, and start doing vanilla binary search
  l     m     r
 ```
 
-Whenever the condition `nums[l] <= nums[m]` is met, this must mean we are to the left of the pivot or `m` is the pivot, for example:
+The cases are the following:
 
-```shell
-[ 1,   2 ]
- l=m   r
+1. The array has not been rotated, `l` is the pivot.
 
-nums[l] <= nums[m] == True
-```
+2. `m` is the pivot, return the pivot
 
-This is the key trick for problems such as `Find Minimum in Rotated Sorted Array` where the binary search conditions would be the following:
+3. `m` is to the left of the pivot, look to the right.
+
+4. `m` is to the right of the pivot, look to the left.
+
+These checks in Python would be the following:
 
 ```python
 if nums[l] <= nums[r]:
-    # nums[l:r] is sorted in increasing order
-    return nums[l]
+    # array has not been rotated
+    return l
 
 if nums[m-1] >= nums[m]:
-    # We are at the pivot
-    return nums[m]
+    # m is the pivot
+    return m
 
 if nums[l] <= nums[m]:
-    # We are to the left of the pivot, go right
+    # nums[l:m] is an increasing array, so m is to the left of the pivot
+    # Look right
     l = m + 1
 else:
-    # We are to the right of the pivot, go left
+    # nums[l:m] is not an increasing array, so m is to the right of the pivot
+    # Look left
     r = m - 1
 ```
 
-For completeness the full algorithm would be:
+# TODO: Explain importance of if nums[l] <= nums[m] including `=` e.g. counter example nums=[2,1]
+
+This is the key trick for problems such as `Find Minimum in Rotated Sorted Array`. For completeness the full algorithm would be for finding the pivot / min value in a rotated increasing array is:
 
 ```python
 def find_min(nums):
     n = len(nums)
     l, r = 0, n-1
     while l <= r:
-        m = l + (r - l) // 2
-    if nums[l] <= nums[r]:
-        # nums[l:r] is sorted in increasing order
-        return nums[l]
+        m = (r + l) // 2
+        if nums[l] <= nums[r]:
+            # nums[l:r] is sorted in increasing order
+            return nums[l]
 
-    if nums[m-1] >= nums[m]:
-        # We are at the pivot
-        return nums[m]
+        if nums[m-1] >= nums[m]:
+            # We are at the pivot
+            return nums[m]
 
-    if nums[l] <= nums[m]:
-        # We are to the left of the pivot, go right
-        l = m + 1
-    else:
-        # We are to the right of the pivot, go left
-        r = m - 1
+        if nums[l] <= nums[m]:
+            # We are to the left of the pivot, go right
+            l = m + 1
+        else:
+            # We are to the right of the pivot, go left
+            r = m - 1
 ```
 
 ### Backtracking
