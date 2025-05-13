@@ -206,7 +206,7 @@ The cases are the following:
 
 1. The array has not been rotated, `l` is the pivot.
 
-2. `m` is the pivot, return the pivot
+2. `m` is the pivot, return `m`.
 
 3. `m` is to the left of the pivot, look to the right.
 
@@ -218,6 +218,8 @@ These checks in Python would be the following:
 if nums[l] <= nums[r]:
     # array has not been rotated
     return l
+
+# array has been rotated
 
 if nums[m-1] >= nums[m]:
     # m is the pivot
@@ -233,7 +235,14 @@ else:
     r = m - 1
 ```
 
-# TODO: Explain importance of if nums[l] <= nums[m] including `=` e.g. counter example nums=[2,1]
+It is important that the condition is `nums[l] <= nums[m]` and not `nums[l] < nums[m]`. We know `m` is not the pivot, if the sub-array `nums[l:m]` (i.e. including index `l` but not index `m`) is increasing then the pivot is to the right of `m` but this is also the case when `nums[l:m]` is an empty array i.e. when `l=m`. For example when `nums=[2,1]`, we have the initial values:
+
+```shell
+[ 2,  1 ]
+ l=m  r
+```
+
+The sub-array `nums[l:m] = []` is empty, so the pivot cannot be there, hence the pivot is to the right of `m`. 
 
 This is the key trick for problems such as `Find Minimum in Rotated Sorted Array`. For completeness the full algorithm would be for finding the pivot / min value in a rotated increasing array is:
 
