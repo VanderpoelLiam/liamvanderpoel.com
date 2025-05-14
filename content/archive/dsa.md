@@ -158,7 +158,58 @@ TODO
 
 ### Hash Maps / Sets
 
-TODO
+Sets in Python are implemented as a hash map, so the time complexities are the same for both. The [docs](https://wiki.python.org/moin/TimeComplexity) state that "The Average Case assumes the keys used in parameters are selected uniformly at random from the set of all keys.", so unless we are adversely selecting keys we can assume the average runtime. Note hashmaps and hashtables are the same data structure, called a `dict` in Python.
+
+#### Hash Maps
+
+| Operation                | Python Code              | Time Complexity |
+|-------------------------|--------------------------|-----------------|
+| Create empty dict       | `d = {}` or `dict()`     | O(1)            |
+| Create dict with items  | `d = {'a': 1, 'b': 2}`    | O(n)            |
+| Add / Update item       | `d['key'] = value`        | O(1) avg        |
+| Remove item by key      | `del d['key']`            | O(1) avg        |
+| Check if key exists     | `'key' in d`              | O(1) avg        |
+| Access value by key     | `d['key']`                | O(1) avg        |
+
+Examples:
+
+```python
+d = {}
+
+d['a'] = 1      # d = {'a': 1}
+d['b'] = 2      # d = {'a': 1, 'b': 2}
+
+d['a'] = 42     # Update value, d = {'a': 42, 'b': 2}
+
+d['a']          # 42
+
+'b' in d        # True
+
+d.pop('b')      # Removes and returns 2
+```
+
+#### Sets
+
+| Operation                | Python Code            | Time Complexity |
+|-------------------------|------------------------|-----------------|
+| Create empty set        | `s = set()`            | O(1)            |
+| Create set with items   | `s = {1, 2, 3}`        | O(n)            |
+| Add item                | `s.add(x)`             | O(1) avg        |
+| Remove item             | `s.remove(x)`          | O(1) avg        |
+| Check if element exists | `x in s`               | O(1) avg        |
+
+Examples:
+
+```python
+s = set()
+
+s.add(1)     # s = {1}
+s.add(2)     # s = {1, 2}
+
+s.remove(1)  # s = {2}
+
+2 in s       # True
+```
 
 ### Heaps
 
@@ -169,6 +220,10 @@ TODO
 TODO
 
 ## Algorithms
+
+### Sliding Window
+
+TODO: Add details
 
 ### Binary Search
 
