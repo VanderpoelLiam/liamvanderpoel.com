@@ -268,8 +268,78 @@ TODO
 
 ### Sliding Window
 
-TODO: Add details
+The general idea is that we are given an array or a string and we want to find some sub-range that meets some criteria e.g. max sum, longest substring with specific chars, number of distinct elements, etc...
 
+Instead of calculating the criteria for each sub-range which would take \\(O(n^2)\\) time (with \\(n\\) the length of our array/string), we slide a window across our input and update our answer incrementally. The window has left/right pointers and gets expanded or shrunk depending on whether the sub-range under consideration violates some constraint. A running variable is often used to track max, longest etc...
+
+#### Longest Substring Without Repeating Characters
+
+The problem is: Given a string `s`, find the length of the longest substring without duplicate characters.
+
+**Examples:**
+
+```text
+Input: s = "zxyzxyz"
+
+Output: 3
+```
+
+```text
+Input: s = "xxxx"
+
+Output: 1
+```
+
+This is a good example of dynamic sliding window. Let `s = "zxyzxyz"`, the idea is to start with a window of the first element `[z]xyzxyz`. The criteria our window needs to satisfy to be valid is that it cannot contain any characters we have seen previously. If it is valid, we update the result tracking the longest substring seen so far and shift our window to the right. Each time we enter the loop, we satisfy the invariant that our previous window was valid, we only need to check is the current character `s[r]` would cause the window to violate the criteria. This would occur at the stage `[zxyz]xyz`, the previous window `[zxy]zxyz` is valid but the current character `s[r] = z` causes the criteria to be invalid. Then we just shift the lhs of the window over until we are valid again. There are additional optimizations that can be done, usually involving using hash maps or sets to speed up checking if an element is in a sub-range, but the key is understanding what the validity criteria of a sub-range is, and how to update our window until it is valid again.
+
+**Code:**
+
+Initial solution:
+
+```python
+def longest_substring(s):
+    n = len(s)
+    l, r = 0, 0
+    res = 0
+
+    while r < n:
+        # Considering window s[l:r+1], know s[l:r] is 
+        # a valid solution
+        while s[r] in s[l:r]:
+            # Make solution valid again
+            l += 1
+        
+        # Now s[l:r+1] is a valid solution
+        res = max(res, len(s[l:r+1]))
+        r += 1
+
+    return res
+```
+
+Optimized solution:
+
+```python
+def longest_substring(s):
+    n = len(s)
+    l, r = 0, 0
+    res = 0
+    seen = set()
+
+    while r < n:
+        # Considering window s[l:r+1], know s[l:r] is 
+        # a valid solution
+        while s[r] in seen:
+            # Make solution valid again
+            seen.remove(s[l])
+            l += 1
+        
+        # Now s[l:r+1] is a valid solution
+        res = max(res, r + 1 - l)
+        seen.add(s[r])
+        r += 1
+
+    return res
+```
 
 ### Binary Search
 
