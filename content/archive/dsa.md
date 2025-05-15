@@ -7,14 +7,6 @@ draft: false
 
 ## Data Structures
 
-<!-- 1. Knowing the time and space complexity of each.
-
-2. Knowing how to implement them.
-
-3. Most importantly, knowing how to use them in your programming language of choice. -->
-
-Reference for [time-complexity of list, queue and set in python](https://wiki.python.org/moin/TimeComplexity).
-
 ### Lists
 
 Take two lists `a = [1, 3, 2]` and `b = [200, 300, 100]`.
@@ -105,7 +97,60 @@ Implememted as `list` in Python.
 
 ### Linked Lists
 
-TODO
+Python does not have native linked lists, so usually they are defined like:
+
+```python
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+```
+
+#### Reversing a Linked List
+
+Define linked list class as above, and you now want to reverse the list:
+
+```shell
+head -> 0 -> 1 -> 2 -> 3
+```
+
+to the list:
+
+```shell
+head -> 3 -> 2 -> 1 -> 0
+```
+
+The we can do this iteratively:
+
+```python
+def reverse_list(head):
+    prev = None
+    curr = head
+    while curr:
+        temp = curr.next
+        curr.next = prev
+        prev = curr
+        curr = temp
+    return prev
+```
+
+or recursively:
+
+```python
+def reverse_list(head):
+    if not head:
+        return None
+
+    if not head.next:
+        return head
+
+    new_head = reverse_list(head.next)
+    head.next.next = head
+    head.next = None
+    return new_head
+```
+
+This is a common sub-problem for linked list related problems.
 
 ### Stacks
 
@@ -224,6 +269,7 @@ TODO
 ### Sliding Window
 
 TODO: Add details
+
 
 ### Binary Search
 
