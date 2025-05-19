@@ -152,6 +152,23 @@ def reverse_list(head):
 
 This is a common sub-problem for linked list related problems.
 
+#### Fast and Slow Pointers
+
+This algorithm is used for linked list related problems to find a cycle. You have two pointers `fast` and `slow`, we increment `slow` by one step each iteration and `fast` by two steps each iteration. The intuition is that the fast pointer will always catch the slow pointer if a cycle exists. This follows from imagining the slow/fast pointers as two runners on a track running in circles. Intuitively the fast runner will always catch the slow one (given they are running in a loop). But why will this take \\(O(n)\\) time? Let `d` be the size of the gap between the fast and slow pointers (i.e. the length of the cycle). Each iteration, the new gap becomes `d + 1 - 2 = d - 1` as the slow pointer increases the gap by one, and the fast pointer decreases it by 1. This means they will be equal in `d` iterations, and as the longest cycle has length \\(O(n)\\), they will be equal in \\(O(n)\\) time. The algorithm then follows:
+
+```python
+def cycle_exists(head):
+    slow, fast = head, head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+
+        if slow == fast:
+            return True
+    
+    return False
+```
+
 ### Stacks
 
 Stacks are LIFO (Last In, First Out). Implemented as lists, do `push(), pop()` using `append(), pop()`.
