@@ -152,9 +152,9 @@ def reverse_list(head):
 
 This is a common sub-problem for linked list related problems.
 
-#### Fast and Slow Pointers
+#### Fast and Slow Pointers (Floyd's Cycle Detection)
 
-This algorithm is used for linked list related problems to find a cycle. You have two pointers `fast` and `slow`, we increment `slow` by one step each iteration and `fast` by two steps each iteration. The intuition is that the fast pointer will always catch the slow pointer if a cycle exists. This follows from imagining the slow/fast pointers as two runners on a track running in circles. Intuitively the fast runner will always catch the slow one (given they are running in a loop). But why will this take \\(O(n)\\) time? Let `d` be the size of the gap between the fast and slow pointers (i.e. the length of the cycle). Each iteration, the new gap becomes `d + 1 - 2 = d - 1` as the slow pointer increases the gap by one, and the fast pointer decreases it by 1. This means they will be equal in `d` iterations, and as the longest cycle has length \\(O(n)\\), they will be equal in \\(O(n)\\) time. The algorithm then follows:
+This algorithm is used for linked list related problems to find a cycle. You have two pointers `fast` and `slow`, we increment `slow` by one step each iteration and `fast` by two steps each iteration. The intuition is that the fast pointer will always catch the slow pointer if a cycle exists. This follows from imagining the slow/fast pointers as two runners on a track running in circles. Intuitively the fast runner will always catch the slow one (given they are running in a loop). But why will this take \\(O(n)\\) time? Let `d` be the size of the gap between the fast and slow pointers. Each iteration, the new gap becomes `d + 1 - 2 = d - 1` as the slow pointer increases the gap by one, and the fast pointer decreases it by 1. This means they will be equal in `d` iterations, and as the longest cycle has length \\(O(n)\\), they will be equal in \\(O(n)\\) time. The algorithm then follows:
 
 ```python
 def cycle_exists(head):
@@ -167,6 +167,68 @@ def cycle_exists(head):
             return True
     
     return False
+```
+
+#### Find duplicate number in array
+
+A special use case of the fast/slow pointer algorithm is to solve the following problem:
+
+Given an array `nums` containing `n + 1` integers where each integer is in the range `[1, n]` inclusive, there is only one repeated number, but it could be repeated more than once. Find that duplicate number using \\(O(1)\\) space and without modifying the array.
+
+Consider instead that we want to find the node at the start of a cycle in a linked list. For example, consider the list `head -> 5 -> 4 -> 1 -> 3 -> 2 -> 1`, we are looking for the node with value `1`. Running [Floyd's algorithm for cycle detection](https://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare) (our code from above), if the fast/slow nodes meet we must be at some point in the cycle but not necessarily at the start. Let \\(x_0, x_1, ..., x_i\\) be all the nodes traversed by the slow pointer. When the fast and slow pointer meet at \\(x_i\\), we are at the minimum \\(i\\) such that \\(x_i = x_{2i}\\). Let \\(\mu\\) be the number of steps from \\(x_0\\) to the start of the cycle and \\(\lambda\\) be the length of the cycle. Therefore \\(i = \mu + a \cdot \lambda\\) and \\(2i = \mu + b \cdot \lambda\\), where \\(a, b\\) are integers representing how many times the slow/fast pointers looped around the cycle before meeting. Combining both equations we have \\(i = (b - a) \cdot \lambda\\), this means that regardless what node I start at in the cycle, if I take \\(i\\) steps I will loop back around to my current position. So in particular \\(x_{i+\mu} = x_\mu\\). This means if I leave the slow pointer at \\(x_i\\), move the fast pointer to \\(x_0\\) and take \\(\mu\\) steps with both pointers, I will have that the slow pointer is at \\(x_{i+\mu}\\) and the fast pointer is at \\(x_{\mu}\\), but as \\(x_{i+\mu} = x_\mu\\) we have `slow == fast` once again. Consequently if I move the fast pointer to \\(x_0\\) and just increment both pointers until they are equal, this occurs at node  \\(x_\mu\\) which is precisely the node we are looking for. In Python this would look like:
+
+```python
+# This assumes a cycle exists.
+
+def find_start_cycle(head):
+    slow, fast = head, head
+
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            break
+    
+    fast = head
+    while fast != slow:
+        fast = fast.next
+        slow = slow.next
+  
+    return slow
+```
+
+Coming back to our original problem of finding repeated elements in an array. We want to reformulate this problem as the start of a cycle in a linked list. Let `nums = [1, 3, 4, 2, 2]`. Let each value in the array be a pointer to the index of the next node, that is for node `i` in the linked list we have `Node(i, nums[i])`, e.g. the first node is `Node(0, 1)` drawn as `0 -> 1`, the second node is `Node(1, 3)` drawn `1->2` (as the value of Node `3` is `2`), etc... If we look at the following table we can see more clearly how to construct the linked list:
+
+```text
+index: [0, 1, 2, 3, 4]
+value: [1, 3, 4, 2, 2]
+```
+
+For each index `i` in `nums`, the node at that position has value `i` and next node at index `nums[i]`, so the linked list would look like:
+
+```text
+0 -> 1 -> 2 -> 4
+          ^___ |
+```
+
+Therefore we simply need to adjust `find_start_cycle(head)` to navigate to the next node by replacing `node = node.next` with `node = nums[node]`. Hence our new algorithm to find duplicates becomes:
+
+```python
+def find_duplicate(nums):
+    slow, fast = 0, 0
+
+    while True:
+        slow = nums[slow]
+        fast = nums[nums[fast]]
+        if slow == fast:
+            break
+    
+    fast = 0
+    while fast != slow:
+        fast = nums[fast]
+        slow = nums[slow] 
+  
+    return slow
 ```
 
 ### Stacks
