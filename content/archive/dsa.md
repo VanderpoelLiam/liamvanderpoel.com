@@ -231,6 +231,30 @@ def find_duplicate(nums):
     return slow
 ```
 
+#### Doubly Linked Lists
+
+[OrderedDict](https://docs.python.org/3/library/collections.html#collections.OrderedDict) is like a normal dict in Python but maintains the ordering of elements added to the dict. However since Python 3.7 the in built [dict](https://docs.python.org/3/library/stdtypes.html#dict) class remembers insertion order. The main convenience of the OrderedDict object is the [move_to_end()](https://docs.python.org/3/library/collections.html#collections.OrderedDict.move_to_end) method which will move the key and its associated value to the rightmost (last) position:
+
+```python
+d = OrderedDict.fromkeys('abcde')
+d.move_to_end('b')
+''.join(d) # 'acdeb'
+
+d.move_to_end('b', last=False)
+''.join(d) #'bacde'
+```
+
+The operations and runtime are the same as for a `dict` with a few differences. See [Hash Maps / Sets](#hash-maps--sets) for more details on the base operations.
+
+| Operation                   | Python Code                              | Time Complexity |
+|----------------------------|-------------------------------------------|-----------------|
+| Create empty OrderedDict   | `from collections import OrderedDict`<br>`od = OrderedDict()` | O(1)            |
+| Create OrderedDict with items | `od = OrderedDict([('a', 1), ('b', 2)])` | O(n)            |
+| Pop item from end/start    | `od.popitem(last=True)`                   | O(1)            |
+| Move key to end/start      | `od.move_to_end('key', last=True)`        | O(1)            |
+
+[OrderedDict is implemented as a doubly-linked list combined with a hash table](https://github.com/python/cpython/blob/1f0a294e8c2ff009c6b74ca5aa71da6269aec0dd/Lib/collections/__init__.py#L89) to achieve constant-time `popitem(last=True)` and `move_to_end('key', last=True)` operations.
+
 ### Stacks
 
 Stacks are LIFO (Last In, First Out). Implemented as lists, do `push(), pop()` using `append(), pop()`.
