@@ -22,8 +22,8 @@ disableTextInHeader = false
 # defaultFeaturedImage = "IMAGE.jpg" # used as default for featured images in all articles
 
 # highlightCurrentMenuArea = true
-# smartTOC = true
-# smartTOCHideUnfocusedChildren = true
+smartTOC = true
+smartTOCHideUnfocusedChildren = true
 
 [header]
   layout = "basic" # valid options: basic, fixed, fixed-fill, fixed-fill-blur
@@ -68,7 +68,7 @@ disableTextInHeader = false
   showReadingTime = false
   showTableOfContents = true
   # showRelatedContent = false
-  # relatedContentLimit = 3
+  # relatedContentLimit = 3
   showTaxonomies = false
   showAuthorsBadges = false
   showWordCount = false
