@@ -710,3 +710,64 @@ This would then have Time & Space Complexity:
 
 - Time complexity: \\(O(n)\\)
 - Space complexity: \\(O(1)\\) (as typically input / output are not counted in space complexity analysis, so we get to ignore the \\(O(n)\\) sized output array we use).
+
+### Graph traversal
+
+All BFS and DFS implementations hav Time & Space Complexity:
+
+- Time complexity: \\(O(V + E)\\), we have to check all nodes and edges.
+- Space complexity: \\(O(V)\\), we have to track visited nodes.
+
+#### Breadth-First Search (BFS)
+
+This traversal explores explores all neighbors level by level in a graph. It uses a queue to track the next nodes to visit and is commonly used to find the closest vertex to the start satisfying some conditions e.g. shortest path between two vertices. It implemented iteratively as follows:
+
+```python
+from collections import deque
+
+def bfs(root):
+    visited = set(root)
+    queue = deque(root)
+    
+    while queue:
+        v = queue.popleft()
+        print(v)
+
+        for u in neighbours(v):
+            if u not in visited:
+                visited.add(u)
+                queue.append(u)
+```
+
+#### Depth-First Search (DFS)
+
+DFS visits the child vertices before visiting the sibling vertices. It uses a stack to track the next nodes to visit and as such the iterative implementation is the exact same as for BFS but with a stack instead of a queue. As `deque` can also be used as a stack, we only have to change a single line `v = queue.popleft()` to `v = queue.pop()`, however it is common to use a list instead:
+
+```python
+def dfs_iterative(root):
+    visited = set(root)
+    stack = [root]
+    
+    while stack:
+        v = stack.pop()
+        print(v)
+
+        for u in neighbours(v):
+            if u not in visited:
+                visited.add(u)
+                stack.append(u)
+```
+
+The recursive implementation of DFS
+
+```python
+def dfs_recursive(root):
+    def dfs(root, visited):
+        if root not in visited:
+            print(root)
+            visited.add(root)
+            for u in neighbours(v):
+                dfs(u, visited)
+
+    return dfs(root, set())
+```
