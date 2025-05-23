@@ -5,6 +5,8 @@ draft: false
 ---
 {{< katex >}}
 
+This is a cheatsheet I made to help me prepare for LeetCode-style coding interviews. There is no replacement for just doing lots of practices problems. The problems sets I recommend are the [Neetcode 150](https://neetcode.io/roadmap) and [Blind 75](https://www.techinterviewhandbook.org/grind75/).
+
 ## Data Structures
 
 ### Lists
