@@ -15,6 +15,8 @@ Researchers have discovered a new miracle drug. They think it has these incredib
 
 2. The alternative hypothesis \\(H_1\\): The drug has an effect.
 
+<!-- TODO: This isn't quite right, raw data would be what I showed and test statistic would be the mean. -->
+
 We then gather some test subjects, split them into treatment/control groups, give them a course of the drug and then measure the outcomes. We need to then condense these outcomes into a [Test Statistic](https://www.ncl.ac.uk/webtemplate/ask-assets/external/maths-resources/statistics/hypothesis-testing/test-statistic.html), essentially a numerical summary of our data. Lets assume our test statistic is a single integer, so our results might look like:
 
 ```text
@@ -32,40 +34,40 @@ Hypothesis testing lets us answer either **Yes! There is an effect** or **We don
 
 We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance.
 
-Therefore, an important part of hypothesis testing is picking appropriate hyperparameters to set our tolerance levels for what level of certainly we want from our experiment.
+Therefore, an important part of hypothesis testing is picking appropriate hyperparameters such that the probability of detecting an effect is within our tolerance levels.
 
-### Statistical Power
+### Power Analysis
+
+The hyperparameters we need to decide on before running our experiment are:
+
+1. Minimum effect size
+2. Tolerance for false positives
+3. Tolerance for false negatives.
+
+The minimum effect size (change in our statistic) we want to be able to detect is a bit of a judgement call, but usually we have some intuition about the expected response, e.g. in our drug example I would expect some people not to respond even if the drug works. Next, in this context false positives/negatives mean the following:
+
+| | Reject \\(H_0\\) | Fail to reject \\(H_0\\) |
+|:---|:---|:---|
+| \\(H_0\\) is True | False Positive | True Positive |
+| \\(H_0\\) is False | True Negative | False Negative |
+
+Our tolerance level is what probability of a false positive or false negative are we willing to accept. The significance level \\(\alpha\\) is the probability of a false positive we are willing to accept. The power is \\(1-\beta\\) where \\(\beta\\) is the probability of a false positive we are willing to accept. We can therefore represent the above table as:
+
+| | Probability to reject \\(H_0\\) | Probability fail to reject \\(H_0\\) |
+|:---|:---|:---|
+| \\(H_0\\) is True | \\(\alpha\\) | \\(1-\alpha\\) |
+| \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
 
 
+<!-- TODO: How does this calculator work? https://www.evanmiller.org/ab-testing/sample-size.html
+TODO: How to pick the sample size: START HERE - https://www.evanmiller.org/how-not-to-run-an-ab-test.html -->
 
-
-
-<!-- Our data is a sequence of test statistics sampled from two distributions. So we can represent our data as two sequences: \\(x_1, x_2, ..., x_n \sim F_1\\) and \\(y_1, y_2, ..., y_m \sim F_2\\). Due to the randomness inherent in sampling, it is possible that even if the distributions are the same we end up with very different samples.  -->
-
-
-<!-- Well I created this data by sampling from a normal distribution with mean 50 and variance 2, so the answer should be no.  -->
-
-
-<!-- TODO: Experimental Design continuation. Think makes sense to start with experimental design, hypothesis testing, then statistical power, then MC methods.
-
-## Monte Carlo Methods
-
-TODO: Explain motivation behind their use.
-
-## A/B Testing
-
-TODO: Explain use cases of A/B testing
-
-### Experimental Design
-
-TODO: Experimental design given 1. we want to detect a minimum effect size 2. what sample size do we need to have a good chance of detecting this minimum effect
-
-## Hypothesis Testing and Types of Errors
-
-TODO: What is hypothesis testing? False positive vs False negative.
-
-### Statistical Power
-
-The minimum effect size we want to be able to detect is a hyperparameter that needs to be selected prior to starting an experiment. This is often a judgement call, and is required in order to answer the question: What sample size do we need to have a good chance of detecting the minimum effect? -->
 
 {{< reflist >}}
+
+Relevant links:
+
+- [Monte Carlo Power Analysis](https://deliveroo.engineering/2018/12/07/monte-carlo-power-analysis.html)
+- [The Unreasonable Effectiveness of Monte Carlo Simulations in A/B Testing](https://bytepawn.com/unreasonable-effectiveness-monte-carlo-ab-testing.html)
+- [Building intuition for p-values and statistical significance](https://bytepawn.com/building-intuition-p-values-statistical-significance.html#building-intuition-p-values-statistical-significance)
+- [Beautiful A/B testing](https://bytepawn.com/beautiful-ab-testing.html#beautiful-ab-testing)
