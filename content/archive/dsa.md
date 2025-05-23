@@ -255,6 +255,23 @@ The operations and runtime are the same as for a `dict` with a few differences. 
 
 [OrderedDict is implemented as a doubly-linked list combined with a hash table](https://github.com/python/cpython/blob/1f0a294e8c2ff009c6b74ca5aa71da6269aec0dd/Lib/collections/__init__.py#L89) to achieve constant-time `popitem(last=True)` and `move_to_end('key', last=True)` operations.
 
+### Queues
+
+Queues are FIFO (First In, First Out). Use `deque` implementation from `collections`, do `push(), pop()` using `append(), popleft()`.
+
+```python
+from collections import deque
+
+queue = deque()
+
+queue.append(1) # queue = deque([1])
+queue.append(2) # queue = deque([1, 2])
+
+queue.popleft()  # 1, queue = deque([2])
+
+queue = deque([1, 2])  # Initialize deque with [1, 2]
+```
+
 ### Stacks
 
 Stacks are LIFO (Last In, First Out). Implemented as lists, do `push(), pop()` using `append(), pop()`.
@@ -283,21 +300,6 @@ stack.append(2) # stack = deque([1, 2])
 top_item = stack.pop() # 2, stack = deque([1])
 
 top = stack[-1] # 1, stack = deque([1])
-```
-
-### Queues
-
-Queues are FIFO (First In, First Out). Use `deque` implementation from `collections`, do `push(), pop()` using `append(), popleft()`.
-
-```python
-from collections import deque
-
-queue = deque()
-
-queue.append(1) # queue = deque([1])
-queue.append(2) # queue = deque([1, 2])
-
-queue.popleft()  # 1, queue = deque([2])
 ```
 
 ### Binary Trees
@@ -727,7 +729,7 @@ from collections import deque
 
 def bfs(root):
     visited = set(root)
-    queue = deque(root)
+    queue = deque([root])
     
     while queue:
         v = queue.popleft()
