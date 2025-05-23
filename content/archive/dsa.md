@@ -5,7 +5,7 @@ draft: false
 ---
 {{< katex >}}
 
-This is a cheatsheet I made to help me prepare for LeetCode-style coding interviews. There is no replacement for just doing lots of practices problems. The problems sets I recommend are the [Neetcode 150](https://neetcode.io/roadmap) and [Blind 75](https://www.techinterviewhandbook.org/grind75/).
+This is a cheatsheet I made to help me prepare for LeetCode-style coding interviews. There is no replacement for just doing lots of practices problems. The problems sets I recommend are the [Neetcode 150](https://neetcode.io/roadmap) or [Blind 75](https://www.techinterviewhandbook.org/grind75/).
 
 Personally I do not think it is worth practicing LeetCode hard problems as the goal during the practice phase is to be exposed to as many different techniques as possible in as little time as possible. Hard problems have a poor "time spent on the problem" to "new technique exposure" ratio. However as a means of checking your understanding of a given technique they can be worthwhile, but only after you have completed all the easy / medium problems in [Neetcode 150](https://neetcode.io/roadmap), [Blind 75](https://www.techinterviewhandbook.org/grind75/), or an equivalent problem set.
 
