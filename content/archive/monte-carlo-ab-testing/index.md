@@ -210,7 +210,7 @@ p-value: 0.015
 The miracle drug works!
 ```
 
-Good news right? At this point I should mention that I generated the data by sampling 20 times from \\(\mathcal{N}(50, 2)\\) and then splitting the data in half. So if the samples are all drawn from the same distribution why are we getting a statistically significant result.
+Good news right? At this point I should mention that I generated the data by sampling 20 times from \\(\mathcal{N}(50, 2)\\) and then splitting the data in half. So if the samples are all drawn from the same distribution why are we getting a statistically significant result?
 
 <!-- TODO: Explain with formula from here: https://www.nber.org/system/files/working_papers/w15701/w15701.pdf what the smallest difference we can measure is? Also explain that CLT has assumptions on n being sufficiently large that are likely not met -->
 
