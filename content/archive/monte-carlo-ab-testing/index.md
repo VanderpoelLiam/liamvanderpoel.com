@@ -77,7 +77,6 @@ Where \\(\sigma^2\\) is the expected sample variance. We likely do not know the 
 
 The paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) provides a better estimate of \\(n\\) in section 3.1 given our specific choice of \\(\alpha\\) and \\(\beta\\):
 
-
 $$
 n = 2 \cdot (t_{\alpha/2} + t_{\beta})^2 \cdot \frac{\sigma^2}{\delta^2}
 $$
@@ -113,6 +112,14 @@ t_beta = norm.ppf(power)
 n = math.ceil(2 * (t_alpha + t_beta)**2 * min_effect_ratio**(-2))
 print(n) # 651
 ```
+
+#### Size of effect we can detect
+
+If we are running our experiment, we should not be reporting significance levels until the experiment is over. However we can still report the size of the effect we can detect given the current sample size:
+
+$$
+\delta = \sigma \cdot (t_{\alpha/2} + t_{\beta}) \cdot \sqrt{\frac{2}{n}}
+$$
 
 {{< reflist >}}
 
