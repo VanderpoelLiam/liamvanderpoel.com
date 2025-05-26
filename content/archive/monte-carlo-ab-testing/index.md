@@ -1,5 +1,5 @@
 ---
-title: "Monte Carlo Simulations and A/B Testing"
+title: "A/B Testing"
 date: 2025-05-23T14:37:05+02:00
 draft: false
 ---
@@ -15,9 +15,7 @@ Researchers have discovered a new miracle drug. They think it has these incredib
 
 2. The alternative hypothesis \\(H_1\\): The drug has an effect.
 
-<!-- TODO: This isn't quite right, raw data would be what I showed and test statistic would be the mean. -->
-
-We then gather some test subjects, split them into treatment/control groups, give them a course of the drug and then measure the outcomes. We need to then condense these outcomes into a [Test Statistic](https://www.ncl.ac.uk/webtemplate/ask-assets/external/maths-resources/statistics/hypothesis-testing/test-statistic.html), essentially a numerical summary of our data. Lets assume our test statistic is a single integer, so our results might look like:
+We then gather some test subjects, split them into treatment/control groups, give them a course of the drug and then measure the outcomes. Let us assume our outcomes are integers, we might have the following raw data:
 
 ```text
 Treatment group: [48, 48, 48, 48, 51, 51, 47, 50, 51, 46]
@@ -57,7 +55,6 @@ Our tolerance level is what probability of a false positive or false negative ar
 |:---|:---|:---|
 | \\(H_0\\) is True | \\(\alpha\\) | \\(1-\alpha\\) |
 | \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
-
 
 ### Selecting the sample size
 
@@ -120,6 +117,105 @@ If we are running our experiment, we should not be reporting significance levels
 $$
 \delta = \sigma \cdot (t_{\alpha/2} + t_{\beta}) \cdot \sqrt{\frac{2}{n}}
 $$
+
+### p-values and statistical significance
+
+Lets say we ran the experiment having selecting our tolerance for error, our expected effect size and plugged this into the above formula to pick the number of samples. We got some data that looks like this:
+
+```text
+Group A: [48, 48, 48, 48, 51, 51, 47, 50, 51, 46]
+Group B: [50, 51, 50, 49, 50, 49, 50, 52, 51, 51]
+```
+
+We now come back the the question: Did our drug have an effect?
+
+To perform a hypothesis test, we need to do two things:
+
+1. Model the distribution of \\(H_0\\). This is our test statistic.
+
+2. Compute how likely it is that our samples were generated under \\(H_0\\). This is our p-value.
+
+Define null hypothesis more precisely as the means are the same for both groups, and the alternative hypothesis that they are not the same. According to the Central Limit Theorem (CLT) the sample distribution of the mean converges to a normal distribution as \\(n \to \infty\\). So under the null hypothesis, we can model:
+
+$$
+\frac{\mu_B - \mu_A}{\sqrt{\frac{\sigma_B^2 + \sigma_A^2}{n}}} \sim \mathcal{N}(0, 1)
+$$
+
+where \\(\mu_A, \mu_B\\) and and \\(\sigma_A^2, \sigma_B^2\\) are the true means and variances respectively. See [The art of A/B testing](https://archive.ph/8Bp8p) for more details on the derivation. We then compute a test statistic \\(\hat{z}\\) from the empirical means and variances:
+
+$$
+\hat{z} = \frac{\hat{\mu}_B - \hat{\mu}_A}{\sqrt{\frac{\hat{\sigma}_B^2 + \hat{\sigma}_A^2}{n}}}
+$$
+
+Under the null hypothesis, this is a sample from a standard normal. The p-value is a measure of how surprising our result is under the null hypothesis. A low p-value means our result is very unexpected, and suggests that our null hypothesis may not be correct. In general, the p-value is:
+
+$$
+\text{p-value} = P(\text{Test statistic is as or more extreme than observed} \mid H_0)
+$$
+
+for our given test statistic and alternate hypothesis this is:
+
+$$
+\text{p-value} = P(|Z| \geq |\hat{z}|)
+$$
+
+Note that if our alternative hypothesis was instead \\(\mu_B > \mu_A\\), the p-value would instead be \\(P(Z \geq \hat{z})\\) as the alternative hypothesis is one-sided. However given the stated alternative hypothesis, putting everything together we would compute the p-value in Python as follows (adapted from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html)):
+
+```python
+import numpy as np
+from scipy.stats import norm
+
+
+def z_to_p(z, one_sided):
+    p = 1 - norm.cdf(z)
+    if one_sided:
+        return p
+    else:
+        return 2*p
+
+
+A = np.array([48, 48, 48, 48, 51, 51, 47, 50, 51, 46])
+B = np.array([50, 51, 50, 49, 50, 49, 50, 52, 51, 51])
+N = 10
+
+alpha = 0.05
+
+
+mu_A = np.mean(A)
+mu_B = np.mean(B)
+
+var_A = np.var(A)
+var_B = np.var(B)
+
+z_hat = (mu_B - mu_A) / np.sqrt((var_A + var_B) / N)
+
+p = z_to_p(z_hat, one_sided=False)
+
+print('Empirical mean for A: %.3f' % mu_A)
+print('Empirical mean for B: %.3f' % mu_B)
+
+print('p-value: %.3f' % p)
+if p <= alpha:
+    print("""The miracle drug works!""")
+else:
+    print("""We're not sure if the drug works.""")
+```
+
+This outputs:
+
+```text
+Empirical mean for A: 48.800
+Empirical mean for B: 50.300
+p-value: 0.015
+The miracle drug works!
+```
+
+Good news right? At this point I should mention that I generated the data by sampling 20 times from \\(\mathcal{N}(50, 2)\\) and then splitting the data in half. So if the samples are all drawn from the same distribution why are we getting a statistically significant result.
+
+<!-- TODO: Explain with formula from here: https://www.nber.org/system/files/working_papers/w15701/w15701.pdf what the smallest difference we can measure is? Also explain that CLT has assumptions on n being sufficiently large that are likely not met -->
+
+<!-- TODO: Makes sense to layout article more like in https://bytepawn.com/ab-testing-and-the-ztest.html -->
+
 
 {{< reflist >}}
 
