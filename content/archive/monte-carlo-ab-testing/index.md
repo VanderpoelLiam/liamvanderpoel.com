@@ -216,12 +216,11 @@ Good news right? At this point I should mention that I generated the data by sam
 
 <!-- TODO: Makes sense to layout article more like in https://bytepawn.com/ab-testing-and-the-ztest.html -->
 
-
 {{< reflist >}}
 
-Relevant links:
+<!-- Relevant links:
 
 - [Monte Carlo Power Analysis](https://deliveroo.engineering/2018/12/07/monte-carlo-power-analysis.html)
 - [The Unreasonable Effectiveness of Monte Carlo Simulations in A/B Testing](https://bytepawn.com/unreasonable-effectiveness-monte-carlo-ab-testing.html)
 - [Building intuition for p-values and statistical significance](https://bytepawn.com/building-intuition-p-values-statistical-significance.html#building-intuition-p-values-statistical-significance)
-- [Beautiful A/B testing](https://bytepawn.com/beautiful-ab-testing.html#beautiful-ab-testing)
+- [Beautiful A/B testing](https://bytepawn.com/beautiful-ab-testing.html#beautiful-ab-testing) -->
