@@ -32,7 +32,7 @@ Hypothesis testing lets us answer either **Yes! There is an effect** or **We don
 
 2. **Fail to reject the null hypothesis**: We don't have enough evidence to claim the drug has an effect.
 
-We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance. If we take the analogy of a murder trial. \\(H_0\\) is an innocent verdict, \\(H_1\\) is a guilty verdict. You can either find a defendant guilty (reject \\(H_0\\)) or you find them innocent (fail to reject \\(H_0\\)). But note that finding someone innocent occurs if we fail to prove guilt beyond reasonable doubt. It is not a question of "proving innocence" (accepting \\(H_0\\)) but rather failing to prove guilt.
+We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance. If we take the analogy of a murder trial. \\(H_0\\) is an innocent verdict, \\(H_1\\) is a guilty verdict. We can either find a defendant guilty (reject \\(H_0\\)) or we find them innocent (fail to reject \\(H_0\\)). But note that finding someone innocent occurs if we fail to prove guilt beyond reasonable doubt. It is not a question of "proving innocence" (accepting \\(H_0\\)) but rather failing to prove guilt.
 
 Therefore, an important part of hypothesis testing is picking appropriate hyperparameters such that the probability of detecting an effect is within our tolerance levels.
 
@@ -59,9 +59,60 @@ Our tolerance level is what probability of a false positive or false negative ar
 | \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
 
 
-<!-- TODO: How does this calculator work? https://www.evanmiller.org/ab-testing/sample-size.html
-TODO: How to pick the sample size: START HERE - https://www.evanmiller.org/how-not-to-run-an-ab-test.html -->
+### Selecting the sample size
 
+So we now have the following hyperparameters set for our experiment:
+
+1. Minimum effect size: \\(\delta\\)
+2. Tolerance for false positives: \\(\alpha\\)
+3. Tolerance for false negatives: \\(\beta\\)
+
+We are now ready to run our experiment, but how many samples should we collect? The article by Evan Miller [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) explains that in order to avoid "repeated significance testing errors" we need to fix the sample size in advance. Have a look at the article for an explanation for why this is so important. To fix the sample size in advance, a good rule of thumb is:
+
+$$
+n = 16\frac{\sigma^2}{\delta^2}
+$$
+
+Where \\(\sigma^2\\) is the expected sample variance. We likely do not know the variance in advance, but it can be estimated through Monte Carlo methods (which we will come to later) or if we are dealing with a statistic sampled from a binomial distribution (e.g. our data is a series of binary outcomes and we compute the success rate) we often can estimate the success probability \\(p\\), then the variance is just \\(\sigma^2 = p \cdot (1-p)\\).
+
+The paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) provides a better estimate of \\(n\\) in section 3.1 given our specific choice of \\(\alpha\\) and \\(\beta\\):
+
+
+$$
+n = 2 \cdot (t_{\alpha/2} + t_{\beta})^2 \cdot \frac{\sigma^2}{\delta^2}
+$$
+
+where \\(t_{\alpha}\\) is the solution to the equation
+
+$$
+P(Z > t_{\alpha}) = \alpha
+$$
+
+Where \\(Z\\) is the standard normal. In python this would look like:
+
+```python
+from scipy.stats import norm
+
+alpha = 0.05
+t_alpha = norm.ppf(1 - alpha)
+```
+
+Another useful trick is to specify the minium effect size as a fraction of the standard deviation. For example, if we want to be able to detect a 0.2 standard deviation change we set \\(\delta = 0.2 \sigma \\), and we select significance \\(\alpha = 0.01\\) and power \\(1-\beta = 0.9\\), the number of samples we need are:
+
+```python
+import math
+from scipy.stats import norm
+
+alpha = 0.01
+power = 0.9
+min_effect_ratio = 0.2
+t_alpha = norm.ppf(1 - alpha)
+t_beta = norm.ppf(power)
+
+
+n = math.ceil(2 * (t_alpha + t_beta)**2 * min_effect_ratio**(-2))
+print(n) # 651
+```
 
 {{< reflist >}}
 
