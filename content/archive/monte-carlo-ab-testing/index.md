@@ -32,7 +32,7 @@ Hypothesis testing lets us answer either **Yes! There is an effect** or **We don
 
 2. **Fail to reject the null hypothesis**: We don't have enough evidence to claim the drug has an effect.
 
-We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance.
+We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance. If we take the analogy of a murder trial. \\(H_0\\) is an innocent verdict, \\(H_1\\) is a guilty verdict. You can either find a defendant guilty (reject \\(H_0\\)) or you find them innocent (fail to reject \\(H_0\\)). But note that finding someone innocent occurs if we fail to prove guilt beyond reasonable doubt. It is not a question of "proving innocence" (accepting \\(H_0\\)) but rather failing to prove guilt.
 
 Therefore, an important part of hypothesis testing is picking appropriate hyperparameters such that the probability of detecting an effect is within our tolerance levels.
 
