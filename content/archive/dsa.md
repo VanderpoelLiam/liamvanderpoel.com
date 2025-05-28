@@ -308,7 +308,67 @@ top = stack[-1] # 1, stack = deque([1])
 
 ### Binary Trees
 
-TODO
+A binary tree is a tree where each node has up to two children. A binary search tree (BST) is a binary tree with the additional invariant that the all nodes in the left subtree are less the parent and all nodes in the right subtree are greater than the parent. For example:
+
+```text
+        8
+       / \
+      3   10
+     / \    \
+    1   6    14
+       / \   /
+      4   7 13
+```
+
+#### Finding Lowest Common Ancestor
+
+The Lowest Common Ancestor (LCA) of two nodes `p` and `q` in a binary tree is the lowest node (i.e. deepest in tree) that is an ancestor of both. Assume both `p` and `q` are in the tree, and the values are all unique for both algorithms below. If we are dealing with a binary tree (i.e. not a BST) the approach is to traverse the tree starting from the root. If the root is equal to `p` or `q` then the root is the LCA. Otherwise we have three cases:
+
+1. `p` and `q` are in different subtrees, so the root is the LCA
+2. `p` and `q` are in the left subtree, so the LCA is the result of recursing on the left subtree.
+3. `p` and `q` are in the right subtree, so the LCA is the result of recursing on the right subtree.
+
+The trick is that we return None if we cannot find `p` or `q` in our recursion. For example, if `left = lca(root.left, p, q)` is None this means that `p` and `q` are NOT in the left subtree, so the solution is `right = lca(root.right, p, q)`. This leads to the algorithm:
+
+```python
+def lca(root, p, q):
+    if root is None or root.val == p.val or root.val == q.val:
+        return root
+
+    left = lca(root.left, p, q)
+    right = lca(root.right, p, q)
+
+    if left and right:
+        # p and q in different subtrees
+        return root
+ 
+    # return result on whichever subtree contains p and q
+    return left if left else right
+```
+
+Time complexity is \\(O(n)\\) is we have to explore both subtrees in the worst case, which requires visiting all nodes. Our space complexity is the recursion depth which is \\(O(h)\\).
+
+For a BST, the invariant allows us to know whether the LCA is in the left/right subtree without having to recurse on both subtrees. The three cases are:
+
+1. `p.val` and `q.val` are less than `root.val`, so the LCA is in the left subtree
+2. `p.val` and `q.val` are greater than `root.val`, so the LCA is in the right subtree
+3. `p` and `q` are in different subtrees, so the root is the LCA
+
+This leads to a similar recursion as before, but the main difference is never have to explore both subtrees, either the left or the right. This leads a faster algorithm as the runtime depends only on the height of the tree. The space complexity is unchanged:
+
+```python
+def lca(root, p, q):
+    if root is None:
+        return root
+    
+    if p.val < root.val and q.val < root.val:
+        return lca(root.left, p, q)
+    
+    if p.val > root.val and q.val > root.val:
+        return lca(root.right, p, q)
+    
+    return root
+```
 
 ### Hash Maps / Sets
 
