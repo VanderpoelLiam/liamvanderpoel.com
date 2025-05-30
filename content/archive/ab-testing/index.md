@@ -5,6 +5,8 @@ draft: false
 ---
 {{< katex >}}
 
+A/B testing is a way of comparing two versions of something and deciding which performs better. It is a form of hypothesis testing, where we gather evidence about how our change impacts the metrics we care about. For example, Netflix might test out a new version of their recommendation algorithm and want to decide if it increases the amount of time users spend watching movies. The classical hypothesis testing example however is the randomized control trial.
+
 ## Hypothesis Testing
 
 Consider the following scenario:
@@ -13,16 +15,22 @@ Researchers have discovered a new miracle drug. They think it has these incredib
 
 1. Null hypothesis \\(H_0\\): The drug has no effect.
 
-2. The alternative hypothesis \\(H_1\\): The drug has an effect.
+2. The alternative hypothesis \\(H_1\\): The drug has a positive effect.
 
-We then gather some test subjects, split them into treatment/control groups, give them a course of the drug and then measure the outcomes. Let us assume our outcomes are integers, we might have the following raw data:
+We then gather some test subjects, split them into groups A and B, give group B a course of the drug and then measure the outcomes of both groups. Let us assume our outcomes are integers (where higher numbers mean a more positive outcome), we might have the following raw data:
 
 ```text
-Treatment group: [48, 48, 48, 48, 51, 51, 47, 50, 51, 46]
-Control group: [50, 51, 50, 49, 50, 49, 50, 52, 51, 51]
+Group A: [48, 48, 48, 48, 51, 51, 47, 50, 51, 46]
+Group B: [50, 51, 50, 49, 50, 49, 50, 52, 51, 51]
 ```
 
-Did our drug have an effect?
+and our hypotheses are formalized in terms of the average outcome of each group:
+
+1. Null hypothesis \\(H_0\\): \\(\mu_A = \mu_B\\).
+
+2. The alternative hypothesis \\(H_1\\): \\(\mu_B > \mu_A\\)
+
+Did our drug have a positive effect?
 
 Hypothesis testing lets us answer either **Yes! There is an effect** or **We don't have any evidence of an effect**. Formally we can either:
 
@@ -32,31 +40,47 @@ Hypothesis testing lets us answer either **Yes! There is an effect** or **We don
 
 We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance. If we take the analogy of a murder trial. \\(H_0\\) is an innocent verdict, \\(H_1\\) is a guilty verdict. We can either find a defendant guilty (reject \\(H_0\\)) or we find them innocent (fail to reject \\(H_0\\)). But note that finding someone innocent occurs if we fail to prove guilt beyond reasonable doubt. It is not a question of "proving innocence" (accepting \\(H_0\\)) but rather failing to prove guilt.
 
-Therefore, an important part of hypothesis testing is picking appropriate hyperparameters such that the probability of detecting an effect is within our tolerance levels.
+In this experiment we have 10 test subjects in each group. Is this enough to be confident about our decision?
 
-### Power Analysis
+## Sample size
 
-The hyperparameters we need to decide on before running our experiment are:
+Before running an experiment we need to decide how many samples we are going to collect. Intuitively, the more samples we collect the more confident we will be about our conclusion. However we are usually constrained by a combination of time or money, and so want to pick enough samples such that we are confident enough. Therefore we need to determine the following parameters:
 
-1. Minimum effect size
+1. Minimum expected effect size
 2. Tolerance for false positives
 3. Tolerance for false negatives.
 
-The minimum effect size (change in our statistic) we want to be able to detect is a bit of a judgement call, but usually we have some intuition about the expected response, e.g. in our drug example I would expect some people not to respond even if the drug works. Next, in this context false positives/negatives mean the following:
+The minimum effect size is what is the smallest absolute difference in results \\(\delta\\) that we would care about. E.g. in our drug trial example, we might want to see at least a 5 year increase in lifespan, otherwise we would consider the effect too small to be worth the price of the drug.
+
+The tolerance for false positives / negatives means what probability of a false positive or false negative are we willing to accept. The significance level \\(\alpha\\) is acceptable probability of a false positive. The power is \\(1-\beta\\) where \\(\beta\\) is the acceptable probability of a false negative. Again coming back to our drug trial example, if we have \\(\alpha = 5\\)% and \\(\beta = 20\\)% (so power of 80%) then we are willing to tolerate a 1 in 5 chance that we claim an ineffectual drug has an effect, and a 1 in 20 chance that we fail to detect that a drug improves outcomes.
+
+I find thinking in terms of tolerance levels of adverse outcomes more helpful than thinking in terms of decision tables, but I provide them below for completeness:
 
 | | Reject \\(H_0\\) | Fail to reject \\(H_0\\) |
 |:---|:---|:---|
 | \\(H_0\\) is True | False Positive | True Positive |
 | \\(H_0\\) is False | True Negative | False Negative |
 
-Our tolerance level is what probability of a false positive or false negative are we willing to accept. The significance level \\(\alpha\\) is the probability of a false positive we are willing to accept. The power is \\(1-\beta\\) where \\(\beta\\) is the probability of a false positive we are willing to accept. We can therefore represent the above table as:
+The same information can be expressed in terms of probabilities:
 
 | | Probability to reject \\(H_0\\) | Probability fail to reject \\(H_0\\) |
 |:---|:---|:---|
 | \\(H_0\\) is True | \\(\alpha\\) | \\(1-\alpha\\) |
 | \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
 
-### Selecting the sample size
+Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional null-hypothesis than a directional one. To see this, consider the alternative hypothesis `the drug has an effect`, we have a false positive if we incorrectly find the drug has a positive or a negative effect.
+
+Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) in section 3.1:
+
+TODO: Formula for total number of samples if variances are different but same number of samples
+
+TODO: In real A/B test likely want to only route some users to new version in case it is bad, formula with different variances and fixed ratio A to B
+
+TODO: Code for second version.
+
+TODO: Next steps are p-values and how to avoid invalidating statistical significance by stopping experiments early or peeking at results.
+
+<!-- ### Selecting the sample size
 
 So we now have the following hyperparameters set for our experiment:
 
@@ -211,6 +235,8 @@ The miracle drug works!
 ```
 
 Good news right? At this point I should mention that I generated the data by sampling 20 times from \\(\mathcal{N}(50, 2)\\) and then splitting the data in half. So if the samples are all drawn from the same distribution why are we getting a statistically significant result?
+
+TODO: In practice not needed to derive everything from scratch, can use online calculator like [Evan Miller Sample Size Calculator](https://www.evanmiller.org/ab-testing/sample-size.html) or [GoDaddy maintained Python package](https://github.com/godaddy/sample-size). -->
 
 <!-- TODO: Explain with formula from here: https://www.nber.org/system/files/working_papers/w15701/w15701.pdf what the smallest difference we can measure is? Also explain that CLT has assumptions on n being sufficiently large that are likely not met -->
 
