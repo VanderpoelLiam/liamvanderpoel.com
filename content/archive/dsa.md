@@ -648,6 +648,46 @@ So in total we have \\(1 + b + b^2 + \dots + b^n\\). This is the sum of a geomet
 
 The space required during execution is made up of the call stack and the current state. The call stack has size \\(O(n)\\) as it is can be up to the size of the maximum recursion depth. The size of the state depends on the specifics of the problem, but it is also usually of size \\(O(n)\\). This gives the total space complexity of \\(O(n)\\).
 
+### Finding all subsets
+
+Let's look at a specific example of backtracking. Given an array nums of unique integers, return all possible subsets of nums. For example if `nums = [1,2,3]` we would return `[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]`. For each element of nums we include it or don't include it in a subset. This leads to the following decision tree, and our algorithm is to perform a DFS traversal of the tree and add the value of each node to our result.
+
+```text
+                              []                # Decision: Include nums[0]
+                      /               \
+                    [1]               []        # Decision: Include nums[1] 
+                 /      \           /     \
+            [1,2]       [1]        [2]    []    # Decision: Include nums[2]
+            /   \       / \        / \    / \
+       [1,2,3] [1,2] [1,3] [1] [2,3] [2] [3] []
+```
+
+We need to track the subset we have constructed so far, as well as the index we are making a decision on. We are at a leaf node of our decision tree if the index we are considering is greater than `len(nums)`, at this point we can append our current subset to the solution. This leads to the algorithm:
+
+```python
+def subsets(nums):
+    res = []
+    n = len(nums)
+
+    def backtrack(subset, i):
+        if i > n:
+            # Copy necessary in Python as subset is passed by reference
+            # For more details see: https://nedbatchelder.com/text/names.html
+            res.append(subset.copy())
+        
+        
+        # Include element nums[i]
+        subset.append(nums[i])
+        backtrack(subset, i+1)
+
+        # Don't include element nums[i]
+        subset.pop()
+        backtrack(subset, i+1)
+
+    backtrack([], 0)
+    return res
+```
+
 ### Bucket Sort
 
 This algorithm is useful for problems where we want to get the \\(k\\) most frequent elements in a list.
