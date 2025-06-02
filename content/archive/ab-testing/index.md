@@ -76,19 +76,19 @@ $$
 n = (z_{\alpha} + t_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
 $$
 
-where \\(\sigma_A\\), \\(\sigma_B\\) are the standard deviations of groups A and B, and \\(z_{\alpha}\\) is the solution to the equation
+where \\(\sigma_A\\), \\(\sigma_B\\) are the standard deviations of groups A and B, and \\(z_{\alpha}\\) is the z-score of \\(\alpha\\) i.e. the solution to the equation
 
 $$
-P(Z > t_{\alpha}) = \alpha
+P(Z > z_{\alpha}) = \alpha
 $$
 
-Where \\(Z\\) is the standard normal. In python this would look like:
+where \\(Z\\) is the standard normal. In words \\(z_{\alpha}\\) is the point where we expect a \\(\alpha\\) chance of a data point drawn from \\(Z\\) being larger than this value. In python this can be implemented as:
 
 ```python
 from scipy.stats import norm
 
 alpha = 0.05 # 5%
-t_alpha = norm.ppf(1 - alpha)
+z_alpha = norm.ppf(1 - alpha)
 ```
 
 This formula assumes we have the same number of samples \\(n\\) per group, however we often have that the treatment group B is smaller than the control group A. We therefore would also need to pick the ratio of samples per group, let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
@@ -99,8 +99,11 @@ $$
 
 which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\).
 
+Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? Well we would either need to estimate it empirically e.g. \\(\bar{\mu} = \frac{1}{N} \sum x_i\\) and \\(\bar{\sigma} = \frac{1}{N} \sum (\bar{\mu} - x_i)^2\\) based on some baseline results and extrapolate to the treatment group. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so we only need to estimate the baseline mean \\(\mu_A\\) and can then set the treatment mean to \\(\mu_B = \mu_A + \delta\\).
 
-TODO: Code for second version.
+## p-values
+
+TODO: What if I just eyeballed the sample size and picked n = 16\frac{\sigma^2}{\delta^2}, what is my confidence in my result?
 
 TODO: Next steps are p-values and how to avoid invalidating statistical significance by stopping experiments early or peeking at results.
 
