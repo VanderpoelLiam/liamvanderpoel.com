@@ -68,13 +68,37 @@ The same information can be expressed in terms of probabilities:
 | \\(H_0\\) is True | \\(\alpha\\) | \\(1-\alpha\\) |
 | \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
 
-Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional null-hypothesis than a directional one. To see this, consider the alternative hypothesis `the drug has an effect`, we have a false positive if we incorrectly find the drug has a positive or a negative effect.
+Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional null-hypothesis than a directional one. Hence to maintain our desired false positive rate of \\(\alpha\\), we use the stricter rate of \\(\alpha / 2\\) in our sample size calculation below.
 
-Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) in section 3.1:
+Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) per group in section 3.1:
 
-TODO: Formula for total number of samples if variances are different but same number of samples
+$$
+n = (z_{\alpha} + t_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
+$$
 
-TODO: In real A/B test likely want to only route some users to new version in case it is bad, formula with different variances and fixed ratio A to B
+where \\(\sigma_A\\), \\(\sigma_B\\) are the standard deviations of groups A and B, and \\(z_{\alpha}\\) is the solution to the equation
+
+$$
+P(Z > t_{\alpha}) = \alpha
+$$
+
+Where \\(Z\\) is the standard normal. In python this would look like:
+
+```python
+from scipy.stats import norm
+
+alpha = 0.05 # 5%
+t_alpha = norm.ppf(1 - alpha)
+```
+
+This formula assumes we have the same number of samples \\(n\\) per group, however we often have that the treatment group B is smaller than the control group A. We therefore would also need to pick the ratio of samples per group, let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
+
+$$
+n = (z_{\alpha} + t_{\beta})^2 \cdot \left( \frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B} \right) \cdot \frac{1}{\delta^{2}}
+$$
+
+which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\).
+
 
 TODO: Code for second version.
 
