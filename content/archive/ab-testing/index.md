@@ -99,13 +99,45 @@ $$
 
 which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\).
 
-Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? Well we would either need to estimate it empirically e.g. \\(\bar{\mu} = \frac{1}{N} \sum x_i\\) and \\(\bar{\sigma} = \frac{1}{N} \sum (\bar{\mu} - x_i)^2\\) based on some baseline results and extrapolate to the treatment group. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so we only need to estimate the baseline mean \\(\mu_A\\) and can then set the treatment mean to \\(\mu_B = \mu_A + \delta\\).
+Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? Well we would either need to estimate it empirically e.g. \\(\bar{\mu} = \frac{1}{N} \sum x_i\\) and \\(\bar{\sigma} = \frac{1}{N} \sum (\bar{\mu} - x_i)^2\\) based on some baseline results and extrapolate to the treatment group. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so we only need to estimate the baseline mean \\(\mu_A\\) and can then set the treatment mean to \\(\mu_B = \mu_A + \delta\\). Adapting code from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html) we can calculate the necessary sample size in Python:
+
+```python
+import math
+from scipy.stats import norm
+
+def total_num_samples(var_A, var_B, pi_A, delta, alpha, power, one_sided):
+    """Calculate the total number of samples to achieve desired confidence levels.
+
+    Args:
+        var_A (float): The baseline variance.
+        var_B (float): The treatment variance.
+        pi_A (float): The ratio of samples assigned to the baseline.
+        delta (float): The absolute minimum detectable effect size.
+        alpha (float): The significance level.
+        power (float): The power of the test.
+        one_sided (bool): Whether the alternative hypothesis is directional.
+    """
+    if one_sided:
+        z_alpha = norm.ppf(1 - alpha)
+    else:
+        z_alpha = norm.ppf(1 - alpha / 2)
+  
+    z_power  = norm.ppf(power)
+    pi_B = 1 - pi_A 
+    N = ((z_alpha + z_power) ** 2) * (var_A/pi_A + var_B/pi_B) / (delta) ** 2 
+    return math.ceil(N)
+```
 
 ## p-values
 
+TODO: Next steps are p-values and how to avoid invalidating statistical significance by stopping experiments early or peeking at results.
+
+### Confidence in my result
+
 TODO: What if I just eyeballed the sample size and picked n = 16\frac{\sigma^2}{\delta^2}, what is my confidence in my result?
 
-TODO: Next steps are p-values and how to avoid invalidating statistical significance by stopping experiments early or peeking at results.
+TODO: In practice not needed to derive everything from scratch, can use online calculator like [Evan Miller Sample Size Calculator](https://www.evanmiller.org/ab-testing/sample-size.html) or [GoDaddy maintained Python package](https://github.com/godaddy/sample-size).
+
 
 <!-- ### Selecting the sample size
 
