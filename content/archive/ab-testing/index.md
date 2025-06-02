@@ -73,7 +73,7 @@ Lets assume we have picked all three of these parameters. The last piece of info
 Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) per group in section 3.1:
 
 $$
-n = (z_{\alpha} + t_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
+n = (z_{\alpha} + z_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
 $$
 
 where \\(\sigma_A\\), \\(\sigma_B\\) are the standard deviations of groups A and B, and \\(z_{\alpha}\\) is the z-score of \\(\alpha\\) i.e. the solution to the equation
@@ -94,7 +94,7 @@ z_alpha = norm.ppf(1 - alpha)
 This formula assumes we have the same number of samples \\(n\\) per group, however we often have that the treatment group B is smaller than the control group A. We therefore would also need to pick the ratio of samples per group, let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
 
 $$
-n = (z_{\alpha} + t_{\beta})^2 \cdot \left( \frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B} \right) \cdot \frac{1}{\delta^{2}}
+n = (z_{\alpha} + z_{\beta})^2 \cdot \left( \frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B} \right) \cdot \frac{1}{\delta^{2}}
 $$
 
 which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\).
@@ -130,7 +130,7 @@ def minimum_num_samples(var_A, var_B, pi_A, delta, alpha, power, one_sided):
 
 In practice you do not need to write this code from scratch as you can either use an online calculator like [Evan Miller Sample Size Calculator](https://www.evanmiller.org/ab-testing/sample-size.html) or an open source solution like [GoDaddy maintained Python package](https://github.com/godaddy/sample-size).
 
-## P-values and Statistical Significance
+## p-values and Statistical Significance
 
 Lets say we picked an appropriate the number of samples, ran the experiment and we got some data that looks like this:
 
@@ -243,13 +243,13 @@ Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}
 
 ### Minimum detectable effect
 
-If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf), we can determine how large of an effect can be detected given the current sample size:
+If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) We can determine how large of an effect can be detected given the current sample size:
 
 $$
-\delta = (z_{\alpha} + t_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B}}
+\delta = (z_{\alpha} + z_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B}}
 $$
 
-in Python this looks like:
+In Python this looks like:
 
 ```python
 from scipy.stats import norm
