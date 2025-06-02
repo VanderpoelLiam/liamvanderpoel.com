@@ -128,7 +128,7 @@ def minimum_num_samples(var_A, var_B, pi_A, delta, alpha, power, one_sided):
     return math.ceil(N)
 ```
 
-In practice you do not need to write this code from scratch as you can either use an online calculator like [Evan Miller Sample Size Calculator](https://www.evanmiller.org/ab-testing/sample-size.html) or an open source solution like [GoDaddy maintained Python package](https://github.com/godaddy/sample-size).
+In practice you do not need to write this code from scratch as you can either use an online calculator like [Evan Miller Sample Size Calculator](https://www.evanmiller.org/ab-testing/sample-size.html) or an open source solution like [GoDaddy sample-size Python package](https://github.com/godaddy/sample-size).
 
 ## p-values and Statistical Significance
 
@@ -319,7 +319,9 @@ print(f"Minimum number of samples: {n_samples}")
 
 ### Early Stopping
 
-<!-- TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. https://www.evanmiller.org/how-not-to-run-an-ab-test.html -->
+TODO: Explain problem of peeking at the data and point to [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html)
+
+TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html).
 
 {{< reflist >}}
 
