@@ -230,15 +230,11 @@ if p <= alpha:
     print("""The miracle drug works!""")
 else:
     print("""We're not sure if the drug works.""")
-```
 
-This outputs:
-
-```text
-Empirical mean for A: 48.800
-Empirical mean for B: 50.300
-p-value: 0.007
-The miracle drug works!
+>>> "Empirical mean for A: 48.800"
+>>> "Empirical mean for B: 50.300"
+>>> "p-value: 0.007"
+>>> "The miracle drug works!"
 ```
 
 Good news right? The p-value is less than our significance level, so we have a statistically significant difference right?
@@ -250,29 +246,80 @@ Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}
 If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf), we can determine how large of an effect can be detected given the current sample size:
 
 $$
-\delta = 
+\delta = (z_{\alpha} + t_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B}}
 $$
 
+in Python this looks like:
 
+```python
+from scipy.stats import norm
 
+def minimum_detectable_effect_size(var_A, var_B, n_A, n_B, alpha, power, one_sided):
+    """Calculate the minimum detectable effect size.
 
---- IGNORE BELOW ---
+    Returns the absolute difference between the two means that is detectable
+    with the given parameters.
 
+    Args:
+        var_A (float): The baseline variance.
+        var_B (float): The treatment variance. 
+        n_A (int): The number of samples in the first experiment.
+        n_B (int): The number of samples in the second experiment.
+        alpha (float): The false positive rate we are willing to accept.
+        power (float): (1-power) is the false negative rate we are willing to accept.
+        one_sided (bool): Whether the alternative hypothesis is directional.
 
-TODO: Next steps are p-values and how to avoid invalidating statistical significance by stopping experiments early or peeking at results.
+    Returns:
+        float: The minimum detectable effect size.
+    """
+    if one_sided:
+        z_alpha = norm.ppf(1 - alpha)
+    else:
+        z_alpha = norm.ppf(1 - alpha / 2)
 
-<!-- ### Confidence in my result
+    z_power = norm.ppf(power)
+    
 
-TODO: What if I just eyeballed the sample size and picked n = 16\frac{\sigma^2}{\delta^2}, what is my confidence in my result? -->
+    delta = (z_alpha + z_power) * math.sqrt(var_A / n_A + var_B / n_B)
+    return delta
+```
 
+and if we run this function on our data:
 
+```python
+A = np.array([48, 48, 48, 48, 51, 51, 47, 50, 51, 46])
+B = np.array([50, 51, 50, 49, 50, 49, 50, 52, 51, 51])
+N = 10
 
+alpha = 0.05
+power = 0.8
 
+var_A = np.var(A)
+var_B = np.var(B)
 
+min_delta = minimum_detectable_effect_size(mu_A, mu_B, N, N, alpha, power, one_sided=True)
+min_delta = minimum_detectable_effect_size(var_A, var_B, N, N, alpha, power, one_sided=True) 
 
-<!-- TODO: Explain with formula from here: https://www.nber.org/system/files/working_papers/w15701/w15701.pdf what the smallest difference we can measure is? Also explain that CLT has assumptions on n being sufficiently large that are likely not met -->
+print(f"Minimum detectable effect size: {min_delta:.2f}")
+print(f"Actual effect size: {mu_B - mu_A:.2f}")
 
-<!-- TODO: Makes sense to layout article more like in https://bytepawn.com/ab-testing-and-the-ztest.html -->
+>>> "Minimum detectable effect size: 1.53"
+>>> "Actual effect size: 1.50"
+```
+
+So it seems that we selected too small of a sample size, hence the results of our hypothesis test are not valid. Indeed if we run our sample size calculation function we see that for our desired confidence levels we should have used `74` samples to detect a minimum effect on the order of a `1` absolute increase in mean.
+
+```python
+min_delta = 1
+n_samples = minimum_num_samples(var_A, var_A, 0.5, min_delta, alpha, power, one_sided=True)
+print(f"Minimum number of samples: {n_samples}")
+
+>>> "Minimum number of samples: 74"
+```
+
+### Early Stopping
+
+<!-- TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. https://www.evanmiller.org/how-not-to-run-an-ab-test.html -->
 
 {{< reflist >}}
 
