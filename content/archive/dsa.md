@@ -370,6 +370,30 @@ def lca(root, p, q):
     return root
 ```
 
+#### Inorder, Preorder, and Postorder Traversal of a Binary Tree
+
+If we are doing a DFS traversal of a binary tree we have a choice on when we visit the node during our recursion. If we consider the DFS algorithm below we can see the three possible choices we have for when to visit the root:
+
+```python
+def dfs(root):
+    if not root:
+        return
+    
+    # Can visit root here -- Preorder
+    dfs(root.left)
+    # Or can visit root here -- Inorder
+    dfs(root.right)
+    # Lastly can visit root here -- Postorder
+```
+
+In short:
+
+| Traversal | Visit Order           |
+|----------------|------------------------|
+| Inorder        | Left Subtree → Root → Right    |
+| Preorder       | Root → Left Subtree → Right Subtree    |
+| Postorder      | Left Subtree → Right Subtree → Root    |
+
 ### Hash Maps / Sets
 
 Sets in Python are implemented as a hash map, so the time complexities are the same for both. The [docs](https://wiki.python.org/moin/TimeComplexity) state that "The Average Case assumes the keys used in parameters are selected uniformly at random from the set of all keys.", so unless we are adversely selecting keys we can assume the average runtime. Note hashmaps and hashtables are the same data structure, called a `dict` in Python.
