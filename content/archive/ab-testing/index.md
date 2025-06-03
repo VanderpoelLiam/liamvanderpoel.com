@@ -244,7 +244,7 @@ Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}
 If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) we can determine how large of an effect can be detected given the current sample size:
 
 $$
-\delta = (z_{\alpha} + z_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B}}
+\delta = (z_{\alpha} + z_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B}}
 $$
 
 In Python this looks like:
@@ -285,17 +285,9 @@ def minimum_detectable_effect_size(var_A, var_B, n_A, n_B, alpha, power, one_sid
 and if we run this function on our data:
 
 ```python
-A = np.array([48, 48, 48, 48, 51, 51, 47, 50, 51, 46])
-B = np.array([50, 51, 50, 49, 50, 49, 50, 52, 51, 51])
-N = 10
-
 alpha = 0.05
 power = 0.8
 
-var_A = np.var(A)
-var_B = np.var(B)
-
-min_delta = minimum_detectable_effect_size(mu_A, mu_B, N, N, alpha, power, one_sided=True)
 min_delta = minimum_detectable_effect_size(var_A, var_B, N, N, alpha, power, one_sided=True) 
 
 print(f"Minimum detectable effect size: {min_delta:.2f}")
@@ -317,13 +309,15 @@ print(f"Minimum number of samples: {n_samples}")
 
 ### Early Stopping
 
-How do we now proceed? Do we throw more test subjects at the experiment?
+How do we now proceed? Do we throw more test subjects at the experiment until we have 74 samples? The problem is something called `repeated significance testing errors`. Repeatedly checking the results by running our statistical test multiple times causes the false positive rate to skyrocket. Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, else you might get a false positive like we achieved earlier.
 
-The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
+
+
+<!-- The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
 
 TODO: Explain problem of peeking at the data and point to [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html)
 
-TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html).
+TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html). -->
 
 {{< reflist >}}
 
