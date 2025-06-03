@@ -40,8 +40,6 @@ Hypothesis testing lets us answer either **Yes! There is an effect** or **We don
 
 We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance. If we take the analogy of a murder trial. \\(H_0\\) is an innocent verdict, \\(H_1\\) is a guilty verdict. We can either find a defendant guilty (reject \\(H_0\\)) or we find them innocent (fail to reject \\(H_0\\)). But note that finding someone innocent occurs if we fail to prove guilt beyond reasonable doubt. It is not a question of "proving innocence" (accepting \\(H_0\\)) but rather failing to prove guilt.
 
-In this experiment we have 10 test subjects in each group. Is this enough to be confident about our decision?
-
 ## Sample size
 
 Before running an experiment we need to decide how many samples we are going to collect. Intuitively, the more samples we collect the more confident we will be about our conclusion. However we are usually constrained by a combination of time or money, and so want to pick enough samples such that we are confident enough. Therefore we need to determine the following parameters:
@@ -68,9 +66,9 @@ The same information can be expressed in terms of probabilities:
 | \\(H_0\\) is True | \\(\alpha\\) | \\(1-\alpha\\) |
 | \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
 
-Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional null-hypothesis than a directional one. Hence to maintain our desired false positive rate of \\(\alpha\\), we use the stricter rate of \\(\alpha / 2\\) in our sample size calculation below.
+Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional alternative hypothesis than a directional one. Hence to maintain our desired false positive rate of \\(\alpha\\), we would use the stricter rate of \\(\alpha / 2\\) in our sample size calculation below in case of a non-directional alternative hypothesis.
 
-Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) per group in section 3.1:
+Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) per group in section 3.1:
 
 $$
 n = (z_{\alpha} + z_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
@@ -91,7 +89,7 @@ alpha = 0.05 # 5%
 z_alpha = norm.ppf(1 - alpha)
 ```
 
-This formula assumes we have the same number of samples \\(n\\) per group, however we often have that the treatment group B is smaller than the control group A. We therefore would also need to pick the ratio of samples per group, let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
+This formula assumes we want to have the same number of samples \\(n\\) per group, however we often want the treatment group B to be smaller than the control group A. Thus is we need to decide on an acceptable ratio of control to treatment samples. Let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
 
 $$
 n = (z_{\alpha} + z_{\beta})^2 \cdot \left( \frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B} \right) \cdot \frac{1}{\delta^{2}}
@@ -99,7 +97,7 @@ $$
 
 which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\).
 
-Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? Well we would either need to estimate it empirically e.g. \\(\hat{\mu} = \frac{1}{N} \sum x_i\\) and \\(\hat{\sigma} = \frac{1}{N} \sum (\hat{\mu} - x_i)^2\\) based on some baseline results and extrapolate to the treatment group. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so we only need to estimate the baseline mean \\(\mu_A\\) and can then set the treatment mean to \\(\mu_B = \mu_A + \delta\\). Adapting code from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html) we can calculate the necessary sample size in Python:
+Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? Well we would either need to estimate it empirically e.g. calculate \\(\hat{\mu} = \frac{1}{N} \sum x_i\\) and \\(\hat{\sigma} = \frac{1}{N} \sum (\hat{\mu} - x_i)^2\\) based on some baseline results, and assume the value is close enough to the real standard deviation. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so a trick is to estimate the baseline mean \\(\mu_A\\) then set the treatment mean to \\(\mu_B = \mu_A + \delta\\). Adapting code from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html) we can calculate the necessary sample size in Python:
 
 ```python
 import math
@@ -143,11 +141,11 @@ We now come back the the question we are hoping to answer: Did our drug have a p
 
 To perform a hypothesis test, we need to do two things:
 
-1. Choose a test statistic that summarizes our data as a single number. Model the distribution of the test statistic under the assumption that \\(H_0\\) is true.
+1. Choose a test statistic that summarizes our data as a single number, and then model the distribution of the test statistic under the assumption that \\(H_0\\) is true.
 
-2. Compute how likely it is that our samples were generated under \\(H_0\\). This is our p-value.
+2. Compute how likely it is that our samples were generated under this model. This is our p-value.
 
-Recall that our null hypothesis is the means are the same for both groups \\(\mu_A = \mu_B\\), and the alternative hypothesis that the mean of group B is larger \\(\mu_B > \mu_A\\).
+Recall that our null hypothesis is the means are the same for both groups (\\(\mu_A = \mu_B\\)), and the alternative hypothesis that the mean of group B is larger (\\(\mu_B > \mu_A\\)).
 
 According to the Central Limit Theorem (CLT) the sample distribution of the mean converges to a normal distribution as \\(n \to \infty\\). So per the CLT, we can model the difference in sample means as:
 
@@ -155,7 +153,7 @@ $$
 \hat{\mu}_B - \hat{\mu}_A \sim \mathcal{N}(\mu_B - \mu_A, \frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B})
 $$
 
-where \\(\mu_A, \mu_B\\) and and \\(\sigma_A^2, \sigma_B^2\\) are the true means and variances and \\(\hat{\mu}_A,\hat{\mu}_B\\) are the sample means. Under the null hypothesis \\(\mu_B - \mu_A = 0\\), so our distribution becomes:
+where \\(\mu_A, \mu_B\\) and \\(\sigma_A^2, \sigma_B^2\\) are the true means and variances and \\(\hat{\mu}_A,\hat{\mu}_B\\) are the sample means. Under the null hypothesis \\(\mu_B - \mu_A = 0\\), so our distribution becomes:
 
 $$
 \hat{\mu}_B - \hat{\mu}_A \sim \mathcal{N}(0, \frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B})
@@ -177,7 +175,7 @@ $$
 \hat{z} = \frac{\hat{\mu}_B - \hat{\mu}_A}{\sqrt{\frac{\hat{\sigma}_A^2}{n_A} + \frac{\hat{\sigma}_B^2}{n_B}}}
 $$
 
-This completes the first step, see [The art of A/B testing](https://archive.ph/8Bp8p) for more details on the derivation. Step two is to determine the p-value of the test statistic. The p-value is a measure of how surprising our result is under the null hypothesis. A low p-value means our result is very unexpected, and suggests that our null hypothesis may not be correct. In general, the p-value is:
+This completes the first step, see [The art of A/B testing](https://archive.ph/8Bp8p) for more details on the derivation. Step two is to determine the p-value of the test statistic. The p-value is a measure of how surprising our result is under the null hypothesis. A low p-value means our result is very unexpected, and suggests that our null hypothesis is not correct. In general, the p-value is:
 
 $$
 \text{p-value} = P(\text{Test statistic is as or more extreme than observed} \mid H_0)
@@ -191,7 +189,7 @@ $$
 
 Note that if our alternative hypothesis was instead two-sided, as in \\(\mu_B \neq \mu_A\\), the p-value would instead be \\(P(|Z| \geq |\hat{z}|)\\).
 
-For our hypothesis test we would compute the p-value in Python as follows (adapted from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html)):
+For our hypothesis test we can compute the p-value in Python as follows (adapted from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html)):
 
 ```python
 import numpy as np
@@ -239,11 +237,11 @@ else:
 
 Good news right? The p-value is less than our significance level, so we have a statistically significant difference right?
 
-Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}(50, 2)\\), splitting the data in half and then setting group B to the split with larger mean. So if the samples are all drawn from the same distribution why are we getting a statistically significant result?
+Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}(50, 2)\\), splitting the data in half and then setting group B to the split with larger mean. But if the samples are all drawn from the same distribution why do we obtain a statistically significant result?
 
 ### Minimum detectable effect
 
-If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design.](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) We can determine how large of an effect can be detected given the current sample size:
+If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) we can determine how large of an effect can be detected given the current sample size:
 
 $$
 \delta = (z_{\alpha} + z_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B}}
@@ -307,7 +305,7 @@ print(f"Actual effect size: {mu_B - mu_A:.2f}")
 >>> "Actual effect size: 1.50"
 ```
 
-So it seems that we selected too small of a sample size, hence the results of our hypothesis test are not valid. Indeed if we run our sample size calculation function we see that for our desired confidence levels we should have used `74` samples to detect a minimum effect on the order of a `1` absolute increase in mean.
+we find that the size of the difference we can detect is larger that the actual difference. This invalidates our hypothesis test as the sample size is too small. Indeed if we run our sample size calculation function we see that for our desired confidence levels we should have used `74` samples to detect an absolute increase of the mean by `1` unit:
 
 ```python
 min_delta = 1
@@ -318,6 +316,10 @@ print(f"Minimum number of samples: {n_samples}")
 ```
 
 ### Early Stopping
+
+How do we now proceed? Do we throw more test subjects at the experiment?
+
+The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
 
 TODO: Explain problem of peeking at the data and point to [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html)
 
