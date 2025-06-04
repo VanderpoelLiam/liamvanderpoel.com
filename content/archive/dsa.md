@@ -651,26 +651,26 @@ def backtrack(state):
 
 **Time & Space Complexity:**
 
-- `n`: Depth of recursion / number of decisions
+- `h`: Depth of recursion / number of decisions
 - `b`: Branching factor (choices per step)
 
-**Time Complexity  \\(O(b^n)\\):**
+**Time Complexity  \\(O(b^h)\\):**
 
-In the worst case, we explore all possible combinations of `b` choices at `n` levels:
+In the worst case, we explore all possible combinations of `b` choices at `h` levels:
 
 ```text
 Level 0:        1 call
 Level 1:        b calls
 Level 2:        b^2 calls
 …
-Level n:        b^n calls
+Level h:        b^h calls
 ```
 
-So in total we have \\(1 + b + b^2 + \dots + b^n\\). This is the sum of a geometric series which equals  \\(\frac{b^{n+1} - 1}{b - 1} = O(b^n)\\)
+So in total we have \\(1 + b + b^2 + \dots + b^h\\). This is the sum of a geometric series which equals  \\(\frac{b^{h+1} - 1}{b - 1} = O(b^h)\\)
 
-**Space Complexity \\(O(n)\\):**
+**Space Complexity \\(O(h)\\):**
 
-The space required during execution is made up of the call stack and the current state. The call stack has size \\(O(n)\\) as it is can be up to the size of the maximum recursion depth. The size of the state depends on the specifics of the problem, but it is also usually of size \\(O(n)\\). This gives the total space complexity of \\(O(n)\\).
+The space required during execution is made up of the call stack and the current state. The call stack has size \\(O(h)\\) as it is can be up to the size of the maximum recursion depth. The size of the state depends on the specifics of the problem, but it is also usually of size \\(O(h)\\). This gives the total space complexity of \\(O(h)\\).
 
 ### Finding all subsets
 
