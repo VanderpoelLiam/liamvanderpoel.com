@@ -471,18 +471,14 @@ nums = [10, 9, 6, 2, 4, 5]
 # In-place transformation of nums into a min-heap
 heapq.heapify(nums)
 
-
 # Push a new element into the heap
 heapq.heappush(nums, 1)
 
 # Pop the smallest element from the heap
 heapq.heappop(nums)
 
-# Push then pop in one step (more efficient than separate push + pop)
-result = heapq.heappushpop(nums, 3)
-
-# Replace smallest with new value (pops then pushes, but more efficient)
-replaced = heapq.heapreplace(nums, 7)
+# Peek at min value in heap
+nums[0]
 ```
 
 The time complexity of the heap operations are:
@@ -493,8 +489,6 @@ The time complexity of the heap operations are:
 | Push item                   | `heapq.heappush(nums, item)`        | O(log n)        |
 | Pop smallest item           | `heapq.heappop(nums)`               | O(log n)        |
 | Peek at smallest item       | `nums[0]`                            | O(1)            |
-| Push then pop (faster combo)| `heapq.heappushpop(nums, item)`     | O(log n)        |
-| Pop then push (replace root)| `heapq.heapreplace(nums, item)`     | O(log n)        |
 
 ### Graphs
 
