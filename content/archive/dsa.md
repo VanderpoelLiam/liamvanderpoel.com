@@ -516,6 +516,25 @@ The time complexity of the heap operations are:
 | Pop smallest item           | `heapq.heappop(nums)`               | O(log n)        |
 | Peek at smallest item       | `nums[0]`                            | O(1)            |
 
+#### Priority Queue Example - K Closest Points to Origin
+
+Suppose we are given a list of `points` on the 2D plane and we want to efficiently return the `k`'th closest points to the origin. We would want to initialize a priority queue using a min-heap where the priority is distance to the origin. What entries should we add to our heap to ensure the closest point to the origin is a the top of the heap? The implementation details are explained in [Priority Queue Implementation Notes](https://docs.python.org/3/library/heapq.html#priority-queue-implementation-notes), but in short add entries of the form `[priority, value]` to the heap. For example in our case we would store `[dist to origin, x, y]` in our min-heap, implemented as:
+
+```python
+import math
+import heapq
+
+def distance_to_origin(x, y):
+    return math.sqrt(x**2 + y**2)
+
+min_heap = []
+for x, y in points:
+    dist = (x ** 2) + (y ** 2)
+    min_heap.append([dist, x, y])
+
+heapq.heapify(min_heap)
+```
+
 ### Graphs
 
 TODO
