@@ -17,14 +17,40 @@ Take two lists `a = [1, 3, 2]` and `b = [200, 300, 100]`.
 
 #### Sorting
 
+We can use the [sorted()](https://docs.python.org/3/library/functions.html#sorted) function to sort a list and create a new object:
+
 ```python
 >>> sorted(a)
 [1, 2, 3]
+
 >>> sorted(a, reverse=True)
 [3, 2, 1]
+
 >>> sorted(zip(a, b))
 [(1, 200), (2, 100), (3, 300)]
+
 >>> sorted(zip(a, b), key=lambda x: x[1])
+[(2, 100), (1, 200), (3, 300)]
+```
+
+Otherwise we can use the [list.sort()](https://docs.python.org/3/library/stdtypes.html#list.sort) function to sort in-place:
+
+```python
+a.sort()
+>>> print(a)
+[1, 2, 3]
+
+a.sort(reverse=True)
+>>> print(a)
+[3, 2, 1]
+
+c = list(zip(a, b))
+c.sort()
+>>> print(c)
+[(1, 200), (2, 100), (3, 300)]
+
+c.sort(key=lambda x: x[1])
+>>> print(c)
 [(2, 100), (1, 200), (3, 300)]
 ```
 
