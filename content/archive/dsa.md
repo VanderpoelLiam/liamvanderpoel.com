@@ -535,7 +535,43 @@ for x, y in points:
 heapq.heapify(min_heap)
 ```
 
-#### TODO: Example of only storing k smallest elements using max_heap /reverse example
+#### Kth Largest Element in an Array
+
+There is a trick to using a heap to find the `k`'th largest element in an array `nums` using a heap. There are two approaches depending if we use a min-heap or a max-heap:
+
+##### Min-Heap approach
+
+The idea is that we want the min-heap to contain the `k`'th largest elements seen so far. This is achieved by iteratively adding each number in nums to the min-heap and popping the root each time the list grows larger than `k`. After we have iterated over nums, the min-heap contains the `k` largest elements in nums in increasing order:
+
+```python
+def find_kth_largest(nums, k):
+    min_heap = []
+    heapq.heapify(min_heap)
+
+    for n in nums:
+        heapq.heappush(min_heap, n)
+        if len(min_heap) > k:
+            heapq.heappop(min_heap)
+    
+    return min_heap[0]
+```
+
+Let `n = len(nums)`. The time complexity is \\(O(n \cdot \log{k})\\) as our heap never grows larger than `k` and we do our push/pop trick for each of the `n` numbers. The space complexity is the size of the heap which is \\(O(k)\\).
+
+Alteratively we can use a max-heap. Where we just init the min_heap with negative values, pop the first `k-1` elements in our max_heap, and return the largest element.
+
+```python
+def find_kth_largest(nums, k):
+    max_heap = [-n for n in nums]
+    heapq.heapify(max_heap)
+
+    for i in range(k-1):
+        heapq.heappop(max_heap)
+    
+    return -1 * max_heap[0]
+```
+
+The time complexity is now \\(O(n + k \cdot \log{n})\\) as our heap has size `n` and we pop `k-1` elements. The space complexity now depends on `n` as our heap has size  \\(O(n)\\).
 
 ### Graphs
 
