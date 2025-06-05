@@ -511,7 +511,7 @@ The time complexity of the heap operations are:
 
 | Operation | Python | Time Complexity |
 |-----------------------------|--------------------------------------|-----------------|
-| Create heap from list       | `heapq.heapify(nums)`               | O(n)            |
+| Create heap from list       | `heapq.heapify(nums)`               | O(n), Yes linear not O(n log n) see [docs](https://docs.python.org/3/library/heapq.html#heapq.heapify)         |
 | Push item                   | `heapq.heappush(nums, item)`        | O(log n)        |
 | Pop smallest item           | `heapq.heappop(nums)`               | O(log n)        |
 | Peek at smallest item       | `nums[0]`                            | O(1)            |
@@ -534,6 +534,8 @@ for x, y in points:
 
 heapq.heapify(min_heap)
 ```
+
+#### TODO: Example of only storing k smallest elements using max_heap /reverse example
 
 ### Graphs
 
