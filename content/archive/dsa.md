@@ -449,9 +449,52 @@ s.remove(1)  # s = {2}
 2 in s       # True
 ```
 
-### Heaps
+### Heaps and Priority Queues
 
-TODO
+A priority queue is an abstract data structure that is an array where we each element has a priority and we always pop the highest priority element first regardless of when it was added to the priority queue. A heap is an efficient implementation of a priority queue. It is a complete binary tree satifying the heap property: for every node, the value of its children is greater than or equal to its own value. An example min heap:
+
+```text
+        2
+      /   \
+     4     5
+    / \   /
+   10  9  6
+```
+
+In python the [heapq library](https://docs.python.org/3/library/heapq.html) implements a min-heap (there is no max-heap implementation), so the above heap would be represented as:
+
+```python
+import heapq
+
+nums = [10, 9, 6, 2, 4, 5]
+
+# In-place transformation of nums into a min-heap
+heapq.heapify(nums)
+
+
+# Push a new element into the heap
+heapq.heappush(nums, 1)
+
+# Pop the smallest element from the heap
+heapq.heappop(nums)
+
+# Push then pop in one step (more efficient than separate push + pop)
+result = heapq.heappushpop(nums, 3)
+
+# Replace smallest with new value (pops then pushes, but more efficient)
+replaced = heapq.heapreplace(nums, 7)
+```
+
+The time complexity of the heap operations are:
+
+| Operation | Python | Time Complexity |
+|-----------------------------|--------------------------------------|-----------------|
+| Create heap from list       | `heapq.heapify(nums)`               | O(n)            |
+| Push item                   | `heapq.heappush(nums, item)`        | O(log n)        |
+| Pop smallest item           | `heapq.heappop(nums)`               | O(log n)        |
+| Peek at smallest item       | `nums[0]`                            | O(1)            |
+| Push then pop (faster combo)| `heapq.heappushpop(nums, item)`     | O(log n)        |
+| Pop then push (replace root)| `heapq.heapreplace(nums, item)`     | O(log n)        |
 
 ### Graphs
 
