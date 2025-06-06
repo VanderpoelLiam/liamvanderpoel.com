@@ -792,7 +792,7 @@ So in total we have \\(1 + b + b^2 + \dots + b^h\\). This is the sum of a geomet
 
 The space required during execution is made up of the call stack and the current state. The call stack has size \\(O(h)\\) as it is can be up to the size of the maximum recursion depth. The size of the state depends on the specifics of the problem, but it is also usually of size \\(O(h)\\). This gives the total space complexity of \\(O(h)\\).
 
-### Finding all subsets
+#### Finding all subsets
 
 Let's look at a specific example of backtracking. Given an array nums of unique integers, return all possible subsets of nums. For example if `nums = [1,2,3]` we would return `[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]`. For each element of nums we include it or don't include it in a subset. This leads to the following decision tree, and our algorithm is to perform a DFS traversal of the tree and add the value of each node to our result.
 
@@ -829,6 +829,47 @@ def subsets(nums):
         backtrack(subset, i+1)
 
     backtrack([], 0)
+    return res
+```
+
+#### Palindrome Partitioning
+
+Suppose you want to partition a string `s` into substrings where each substring is a palindrome. For examples, for `s = "aab"` we would output `[["a","a","b"],["aa","b"]]`. The approach is that at each start index of `s` we can take the first 1 char, or the first 2 chars, ... or the first `n-i` to be our partition. This is visualized below:
+
+```text
+                       []
+               /        |       \
+           [a]         [aa]      [aab]
+         /    \         |
+     [a,a]   [a,ab]   [aa,b]
+      /      
+ [a,a,b]   
+```
+
+Then we only need to add the constraint to exclude all solutions where we consider a substring that is not a palindrome:
+
+```python
+def is_palindrome(s):
+    return s == s[::-1]
+
+def partition(s):
+    n = len(s)
+    res = []
+    soln = []
+
+    def backtrack(start):
+        if start >= n:
+            res.append(soln.copy())
+            return
+
+        for end in range(start + 1, n + 1):
+            substring = s[start:end]
+            if is_palindrome(substring):
+                soln.append(substring)
+                backtrack(end)
+                soln.pop()
+
+    backtrack(0)
     return res
 ```
 
