@@ -5,7 +5,7 @@ draft: false
 ---
 {{< katex >}}
 
-A/B testing is a way of comparing two versions of something and deciding which performs better. It is a form of hypothesis testing, where we gather evidence about how our change impacts the metrics we care about. For example, Netflix might test out a new version of their recommendation algorithm and want to decide if it increases the amount of time users spend watching movies. The classical hypothesis testing example however is the randomized control trial.
+A/B testing is a way of comparing two versions of something and deciding which performs better. It is a form of hypothesis testing, where we gather evidence about how our change impacts some metrics we care about and then based on this evidence make a decision whether to use the new version or keep the old one. For example, Netflix might test out a new variation of their recommendation algorithm and want to know if it increases the amount of time users spend watching movies. The classical hypothesis testing example however is the randomized control trial.
 
 ## Hypothesis Testing
 
@@ -40,9 +40,11 @@ Hypothesis testing lets us answer either **Yes! There is an effect** or **We don
 
 We cannot answer **Nope, no effect**, as it may be that we had insufficient data to detect a difference, or just got unlucky due to random chance. If we take the analogy of a murder trial. \\(H_0\\) is an innocent verdict, \\(H_1\\) is a guilty verdict. We can either find a defendant guilty (reject \\(H_0\\)) or we find them innocent (fail to reject \\(H_0\\)). But note that finding someone innocent occurs if we fail to prove guilt beyond reasonable doubt. It is not a question of "proving innocence" (accepting \\(H_0\\)) but rather failing to prove guilt.
 
-## Sample size
+## Sample Size Selection
 
-Before running an experiment we need to decide how many samples we are going to collect. Intuitively, the more samples we collect the more confident we will be about our conclusion. However we are usually constrained by a combination of time or money, and so want to pick enough samples such that we are confident enough. Therefore we need to determine the following parameters:
+### How Many Samples is Enough?
+
+Before running our drug trial experiment we need to decide how many test subject to use. Intuitively, the more subjects we use the more confident we will be about our conclusion. However we are usually constrained by a combination of time or money, and so want to pick enough samples to be "confident enough". Therefore we need to determine the following parameters:
 
 1. Minimum expected effect size
 2. Tolerance for false positives
@@ -50,7 +52,7 @@ Before running an experiment we need to decide how many samples we are going to 
 
 The minimum effect size is what is the smallest absolute difference in results \\(\delta\\) that we would care about. E.g. in our drug trial example, we might want to see at least a 5 year increase in lifespan, otherwise we would consider the effect too small to be worth the price of the drug.
 
-The tolerance for false positives / negatives means what probability of a false positive or false negative are we willing to accept. The significance level \\(\alpha\\) is acceptable probability of a false positive. The power is \\(1-\beta\\) where \\(\beta\\) is the acceptable probability of a false negative. Again coming back to our drug trial example, if we have \\(\alpha = 5\\)% and \\(\beta = 20\\)% (so power of 80%) then we are willing to tolerate a 1 in 5 chance that we claim an ineffectual drug has an effect, and a 1 in 20 chance that we fail to detect that a drug improves outcomes.
+The tolerance for false positives / negatives means what probability of a false positive or false negative are we willing to accept. The significance level \\(\alpha\\) is acceptable probability of a false positive. The power is \\(1-\beta\\) where \\(\beta\\) is the acceptable probability of a false negative. Again coming back to our drug trial example, if we have \\(\alpha = 5\\)% and \\(\beta = 20\\)% (so power of 80%) then we are willing to tolerate a 1 in 20 chance that we claim an ineffectual drug has an effect, and a 1 in 5 chance that we fail to detect that a drug improves outcomes.
 
 I find thinking in terms of tolerance levels of adverse outcomes more helpful than thinking in terms of decision tables, but I provide them below for completeness:
 
@@ -66,12 +68,14 @@ The same information can be expressed in terms of probabilities:
 | \\(H_0\\) is True | \\(\alpha\\) | \\(1-\alpha\\) |
 | \\(H_0\\) is False | \\(1-\beta\\) | \\(\beta\\) |
 
-Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional alternative hypothesis than a directional one. Hence to maintain our desired false positive rate of \\(\alpha\\), we would use the stricter rate of \\(\alpha / 2\\) in our sample size calculation below in case of a non-directional alternative hypothesis.
+Lets assume we have picked all three of these parameters. The last piece of information we need is whether the alternative hypothesis is directional. For example, `the drug has a positive effect` is directional while `the drug has an effect` is not. This matters as we will need to adjust our significance level accordingly, as there are twice as many ways to get a false positive for a non-directional alternative hypothesis than a directional one. Hence to maintain our desired false positive rate of \\(\alpha\\), we would use the stricter significance level of \\(\alpha / 2\\) in our sample size calculation below to account for a non-directional alternative hypothesis (also called a two-sided outcome).
 
-Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) explains how to pick the number of samples \\(n\\) per group in section 3.1:
+### Sample Size Formula
+
+Given all this information, the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) derives a formula for how to pick the total number of samples \\(n\\) in section 3.1:
 
 $$
-n = (z_{\alpha} + z_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
+n = 2 \cdot (z_{\alpha} + z_{\beta})^2 \cdot (\sigma_A^2 + \sigma_B^2) \cdot \frac{1}{\delta^{2}}
 $$
 
 where \\(\sigma_A\\), \\(\sigma_B\\) are the standard deviations of groups A and B, and \\(z_{\alpha}\\) is the z-score of \\(\alpha\\) i.e. the solution to the equation
@@ -89,15 +93,15 @@ alpha = 0.05 # 5%
 z_alpha = norm.ppf(1 - alpha)
 ```
 
-This formula assumes we want to have the same number of samples \\(n\\) per group, however we often want the treatment group B to be smaller than the control group A. Thus is we need to decide on an acceptable ratio of control to treatment samples. Let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
+This formula assumes we want to have the same number of samples per group, however we often want the treatment group B to be smaller than the control group A (as a hedge in case the treatment is much worse). Let \\(\pi_A\\) denote the ratio of samples assigned to group A (such that \\(\pi_A + \pi_B = 1\\)), then our formula for the total number of required samples becomes:
 
 $$
 n = (z_{\alpha} + z_{\beta})^2 \cdot \left( \frac{\sigma_A^2}{\pi_A} + \frac{\sigma_B^2}{\pi_B} \right) \cdot \frac{1}{\delta^{2}}
 $$
 
-which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\).
+which we would allocate according to our ratios \\(\pi_A\\) and \\(\pi_B\\). This simplifies to the previous formula for \\(\pi_A = \pi_B = 0.5\\).
 
-Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? Well we would either need to estimate it empirically e.g. calculate \\(\hat{\mu} = \frac{1}{N} \sum x_i\\) and \\(\hat{\sigma} = \frac{1}{N} \sum (\hat{\mu} - x_i)^2\\) based on some baseline results, and assume the value is close enough to the real standard deviation. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so a trick is to estimate the baseline mean \\(\mu_A\\) then set the treatment mean to \\(\mu_B = \mu_A + \delta\\). Adapting code from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html) we can calculate the necessary sample size in Python:
+Lastly, if we have not yet run our experiment how can we know the standard deviations \\(\sigma_A\\), \\(\sigma_B\\)? We would either need to estimate it empirically e.g. calculate \\(\hat{\mu} = \frac{1}{N} \sum x_i\\) and \\(\hat{\sigma} = \frac{1}{N} \sum (\hat{\mu} - x_i)^2\\) based on some baseline results, and assume the value is close enough to the real standard deviation. Or if we are dealing with [Bernoulli random variables](https://en.wikipedia.org/wiki/Bernoulli_distribution) we know  \\(\sigma^2 = \mu \cdot (1-\mu)\\), so a trick is to estimate the baseline mean \\(\mu_A\\) then set the treatment mean to \\(\mu_B = \mu_A + \delta\\). Adapting code from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html) we can calculate the necessary sample size in Python:
 
 ```python
 import math
@@ -130,6 +134,8 @@ In practice you do not need to write this code from scratch as you can either us
 
 ## p-values and Statistical Significance
 
+### Computing the p-value
+
 Lets say we picked an appropriate the number of samples, ran the experiment and we got some data that looks like this:
 
 ```text
@@ -147,7 +153,7 @@ To perform a hypothesis test, we need to do two things:
 
 Recall that our null hypothesis is the means are the same for both groups (\\(\mu_A = \mu_B\\)), and the alternative hypothesis that the mean of group B is larger (\\(\mu_B > \mu_A\\)).
 
-According to the Central Limit Theorem (CLT) the sample distribution of the mean converges to a normal distribution as \\(n \to \infty\\). So per the CLT, we can model the difference in sample means as:
+According to the Central Limit Theorem (CLT) the sample distribution of the mean converges to a normal distribution as \\(n \to \infty\\). So per the CLT if \\(n\\) is sufficiently large, we can model the difference in sample means as the following normal distribution:
 
 $$
 \hat{\mu}_B - \hat{\mu}_A \sim \mathcal{N}(\mu_B - \mu_A, \frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B})
@@ -189,7 +195,7 @@ $$
 
 Note that if our alternative hypothesis was instead two-sided, as in \\(\mu_B \neq \mu_A\\), the p-value would instead be \\(P(|Z| \geq |\hat{z}|)\\).
 
-For our hypothesis test we can compute the p-value in Python as follows (adapted from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html)):
+We can compute the p-value in Python as follows (adapted from [A/B testing and the Z-test](https://bytepawn.com/ab-testing-and-the-ztest.html)):
 
 ```python
 import numpy as np
@@ -240,6 +246,10 @@ Good news right? The p-value is less than our significance level, so we have a s
 Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}(50, 2)\\), splitting the data in half and then setting group B to the split with larger mean. But if the samples are all drawn from the same distribution why do we obtain a statistically significant result?
 
 ### Minimum detectable effect
+
+TODO: Use Monte-Carlo simulation to show the importance of sample size, and how the false positive rate for 20 samples is super high. I violated my assumption that sample size was X
+
+TODO: Redo this section as not super good transition.
 
 If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) we can determine how large of an effect can be detected given the current sample size:
 
@@ -307,11 +317,11 @@ print(f"Minimum number of samples: {n_samples}")
 >>> "Minimum number of samples: 74"
 ```
 
-### Early Stopping
+TODO: Explain connection to sequential analysis, but that beyond scope this article. But in short, probably fine to continue adding test subject 
 
-How do we now proceed? Do we throw more test subjects at the experiment until we have 74 samples? The problem is something called `repeated significance testing errors`. Repeatedly checking the results by running our statistical test multiple times causes the false positive rate to skyrocket. Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, else you might get a false positive like we achieved earlier.
+<!-- ### Early Stopping
 
-
+How do we now proceed? Do we throw more test subjects at the experiment until we have 74 samples? The problem is something called `repeated significance testing errors`. Repeatedly checking the results by running our statistical test multiple times causes the false positive rate to skyrocket. Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, else you might get a false positive like we achieved earlier. -->
 
 <!-- The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
 
