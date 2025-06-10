@@ -136,16 +136,14 @@ In practice you do not need to write this code from scratch as you can either us
 
 ### Computing the p-value
 
-Lets say we picked an appropriate the number of samples, ran the experiment and we got some data that looks like this:
+Recall, we ran our experiment with 20 samples and got some data that looks like this:
 
 ```text
 Group A: [48, 48, 48, 48, 51, 51, 47, 50, 51, 46]
 Group B: [50, 51, 50, 49, 50, 49, 50, 52, 51, 51]
 ```
 
-We now come back the the question we are hoping to answer: Did our drug have a positive effect?
-
-To perform a hypothesis test, we need to do two things:
+To perform a hypothesis test and answer the question `Did our drug have a positive effect?`, we need to do two things:
 
 1. Choose a test statistic that summarizes our data as a single number, and then model the distribution of the test statistic under the assumption that \\(H_0\\) is true.
 
@@ -243,13 +241,45 @@ else:
 
 Good news right? The p-value is less than our significance level, so we have a statistically significant difference right?
 
-Well... the way I created this data was by sampling 20 times from \\(\mathcal{N}(50, 2)\\), splitting the data in half and then setting group B to the split with larger mean. But if the samples are all drawn from the same distribution why do we obtain a statistically significant result?
+Well ... the way I created this data was by sampling 20 times from \\(\mathcal{N}(50, 2)\\), splitting the data in half and then setting group B to the split with larger mean. Therefore this "statistically significant" difference is completely due to random chance.
 
-### Minimum detectable effect
+### Importance of Sample Size
 
-TODO: Use Monte-Carlo simulation to show the importance of sample size, and how the false positive rate for 20 samples is super high. I violated my assumption that sample size was X
+Using the default confidence levels, if we are looking for a 1% change in the mean, then plugging our parameters into our sample size formula:
 
-TODO: Redo this section as not super good transition.
+```python
+alpha = 0.05
+power = 0.8
+min_delta = 1/100 * mu_A
+n_samples = minimum_num_samples(var_A, var_A, 0.5, min_delta, alpha, power, one_sided=True)
+print(f"Minimum number of samples: {n_samples}")
+
+>>> "Minimum number of samples: 308"
+```
+
+What I am trying to highlight is that p-values and significance only make sense if we have first ensured that we have sufficient samples. Otherwise the assumptions we make to run the hypothesis test break down, and in particular the chance of having a false positive goes up a lot. In general we cannot quantify the false positive rate for a given sample size. However if have the ability to simulate the experiment, then we can use Monte Carlo simulation to estimate it. Based on the code from [The Unreasonable Effectiveness of Monte Carlo Simulations in A/B Testing](https://bytepawn.com/unreasonable-effectiveness-monte-carlo-ab-testing.html) and that our data is drawn from \\(\mathcal{N}(50, 2)\\) we estimate the false positive rate for `N=20` as follows:
+
+TODO: Code and false positive rate
+
+## Avoiding Statistical Sins
+
+TODO: Rework this entire section
+
+<!-- Monte Carlo simulations can also provide insight into another big problem when running A/B tests which is early stopping.
+
+### Early Stopping
+
+How do we now proceed? Do we throw more test subjects at the experiment until we have 74 samples? The problem is something called `repeated significance testing errors`. Repeatedly checking the results by running our statistical test multiple times causes the false positive rate to skyrocket. Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, else you might get a false positive like we achieved earlier.
+
+The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
+
+TODO: Explain problem of peeking at the data and point to [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html)
+
+TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html).
+
+TODO: Explain connection to sequential analysis, but that beyond scope this article. But in short, probably fine to continue adding test subject 
+
+### Minimum Effect Size
 
 If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) we can determine how large of an effect can be detected given the current sample size:
 
@@ -305,29 +335,7 @@ print(f"Actual effect size: {mu_B - mu_A:.2f}")
 
 >>> "Minimum detectable effect size: 1.53"
 >>> "Actual effect size: 1.50"
-```
-
-we find that the size of the difference we can detect is larger that the actual difference. This invalidates our hypothesis test as the sample size is too small. Indeed if we run our sample size calculation function we see that for our desired confidence levels we should have used `74` samples to detect an absolute increase of the mean by `1` unit:
-
-```python
-min_delta = 1
-n_samples = minimum_num_samples(var_A, var_A, 0.5, min_delta, alpha, power, one_sided=True)
-print(f"Minimum number of samples: {n_samples}")
-
->>> "Minimum number of samples: 74"
-```
-
-TODO: Explain connection to sequential analysis, but that beyond scope this article. But in short, probably fine to continue adding test subject 
-
-<!-- ### Early Stopping
-
-How do we now proceed? Do we throw more test subjects at the experiment until we have 74 samples? The problem is something called `repeated significance testing errors`. Repeatedly checking the results by running our statistical test multiple times causes the false positive rate to skyrocket. Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, else you might get a false positive like we achieved earlier. -->
-
-<!-- The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
-
-TODO: Explain problem of peeking at the data and point to [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html)
-
-TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html). -->
+``` -->
 
 {{< reflist >}}
 
