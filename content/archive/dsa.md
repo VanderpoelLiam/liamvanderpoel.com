@@ -579,6 +579,10 @@ TODO
 
 ## Algorithms
 
+### Dynamic Programming
+
+TODO: How to space optimize a DP?
+
 ### Sliding Window
 
 The general idea is that we are given an array or a string and we want to find some sub-range that meets some criteria e.g. max sum, longest substring with specific chars, number of distinct elements, etc...
