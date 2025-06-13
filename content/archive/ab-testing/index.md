@@ -213,14 +213,7 @@ B = np.array([50, 51, 50, 49, 50, 49, 50, 52, 51, 51])
 N = 10
 
 alpha = 0.05
-
-mu_A = np.mean(A)
-mu_B = np.mean(B)
-
-var_A = np.var(A)
-var_B = np.var(B)
-
-z_hat = (mu_B - mu_A) / np.sqrt((var_A + var_B) / N)
+z_hat = (B.mean() - A.mean()) / np.sqrt((A.var() + B.var()) / N)
 
 p = z_to_p(z_hat, one_sided=True)
 
@@ -257,11 +250,41 @@ print(f"Minimum number of samples: {n_samples}")
 >>> "Minimum number of samples: 308"
 ```
 
-What I am trying to highlight is that p-values and significance only make sense if we have first ensured that we have sufficient samples. Otherwise the assumptions we make to run the hypothesis test break down, and in particular the chance of having a false positive goes up a lot. In general we cannot quantify the false positive rate for a given sample size. However if have the ability to simulate the experiment, then we can use Monte Carlo simulation to estimate it. Based on the code from [The Unreasonable Effectiveness of Monte Carlo Simulations in A/B Testing](https://bytepawn.com/unreasonable-effectiveness-monte-carlo-ab-testing.html) and that our data is drawn from \\(\mathcal{N}(50, 2)\\) we estimate the false positive rate for `N=20` as follows:
+We should have used 308 samples to get our desired confidence levels, instead we used 20, what does this mean for our conclusions? First, with limited sample size many of the assumptions we make to run the hypothesis test break down, for example the CLT probably doesn't apply, and so our model of the test statistic is not justified. Therefore any conclusions of significant results based on the computed p-values are meaningless. Second, with small sample sizes the false positive rate of our experiment is much higher. In general we cannot calculate the false positive rate of an hypothesis test given a sample size. But if you make an assumption that you can model the underlying process sufficiently well, then we can just simulate the test many times and estimate how often we get a false positive. This approach is called Monte Carlo simulation, and based on the code from [The Unreasonable Effectiveness of Monte Carlo Simulations in A/B Testing](https://bytepawn.com/unreasonable-effectiveness-monte-carlo-ab-testing.html) and that our data is drawn from \\(\mathcal{N}(50, 2)\\) we can estimate the false positive rate for `N=20` and `N=308` as follows:
 
-TODO: Code and false positive rate
+```python
+def simulate_ab_test(N, lift):
+    """Simulate our drug trial AB test and return the p-value."""
+    mu, sigma = 50, 2
+    A = np.random.normal(mu, sigma, N)
+    B = np.random.normal(mu + lift, sigma, N)
+    z_hat = (B.mean() - A.mean()) / np.sqrt((A.var() + B.var()) / N)
+    p = z_to_p(z_hat, one_sided=True)
+    return p
+    
+alpha = 0.05
+N = 10
+lift = 0
+num_simulations = 100000
+
+p_values = [simulate_ab_test(N, lift) for _ in range(num_simulations)]
+fp_rate = np.sum(np.array(p_values) < alpha) / num_simulations
+print(f"Estimated false positive rate: {fp_rate:.2%} for {N} samples")
+
+N = 308
+p_values = [simulate_ab_test(N, lift) for _ in range(num_simulations)]
+fp_rate = np.sum(np.array(p_values) < alpha) / num_simulations
+print(f"Estimated false positive rate: {fp_rate:.2%} for {N} samples")
+
+>>> "Estimated false positive rate: 6.74% for 10 samples"
+>>> "Estimated false positive rate: 4.93% for 308 samples"
+```
+
+The simulation shows that the false positive rate is `37%` greater when we take 20 samples instead of 308. It also shows that even when there is no true difference, we expect to see some false positives due to chance. 
 
 ## Avoiding Statistical Sins
+
+
 
 TODO: Rework this entire section
 
