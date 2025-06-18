@@ -581,7 +581,193 @@ TODO
 
 ### Dynamic Programming
 
-TODO: How to space optimize a DP?
+Consider the following problem:
+
+We encode a string into a sequence of digits using the mapping `"A" -> "1"`,  `"2" -> "2"` ... `"Z" -> "26"`. Given a string `s` containing only digits, return the number of ways to decode it. E.g. Given `s = "1012"` we can decode it as `10, 1, 2 = "JAB"` or `10, 12 = "JL"`.
+
+To solve this problem we need to understand the decision tree we are trying to explore. We are interested in partitions of `s` that are subject to some constraint. For `s = "1012"` and our decoding constraint the tree looks like:
+
+```text
+                    ""
+            "1"               "10"
+        "0"    "01"        "1"    "12"
+                        "2"
+```
+
+At each split, we can either take a substring of length 1 or 2 subject to the constraint that the substring is a valid encoding. Formally a substring `substr` is a valid encoding if either condition holds:
+
+- `len(substr) == 1` and `substr != "0"`
+- `len(substr) == 2` and `substr[0] != "0"` and `int(substr) <= 26`
+
+#### Recursive Solution
+
+The first approach to a dynamic programming problem is the brute force recursive solution. In this case we want to follow a path in the decision tree until we reach a leaf, increase our count, then backtrack.
+
+```python
+def num_decodings(s):
+    n = len(s)
+    count = 0
+
+    def dfs(i):
+        if i > n:
+            return 
+
+        if i == n:
+            count += 1
+        
+        if s[i:i+1] != "0":
+            dfs(i+1)
+        
+        if i < n-1 and s[i:i+1] != "0" and int(s[i:i+2]) <= 26:
+            dfs(i+2)
+
+    dfs(0)
+    return count
+```
+
+#### Top-down
+
+Next, we want to avoid repeated work. For example with `s = "1012"` the recursion stack looks like:
+
+```text
+dfs(5)
+dfs(4)
+dfs(5)
+dfs(4)
+dfs(3)
+dfs(2)
+dfs(1)
+dfs(0)
+```
+
+So we are repeating the `dfs(5)` and `dfs(4)` calls. To have a top-down dynamic program we want to memorize the solution at each index to avoid repeated work. To start it is necessary to rewrite the recursive solution to not rely on global variables (this is not always needed but often keeping the global leads to issues adding memoization).
+
+```python
+def num_decodings(s):
+    n = len(s)
+
+    def dfs(i):
+        if i > n:
+            return 0
+
+        if i == n:
+            return 1
+        
+        count = 0
+        if s[i:i+1] != "0":
+            count += dfs(i+1)
+        
+        if i < n-1 and s[i:i+1] != "0" and int(s[i:i+2]) <= 26:
+            count += dfs(i+2)
+        return count
+
+    return dfs(0)
+```
+
+Then we can easily adapt it by adding a 1D array `dp` to store solutions we have seen before:
+
+```python
+def num_decodings(s):
+    n = len(s)
+    dp = [-1] * n
+
+    def dfs(i):
+        if i > n:
+            return 0
+
+        if i == n:
+            return 1
+        
+        if dp[i] != -1:
+            return dp[i]
+        
+        dp[i] = 0
+        if s[i:i+1] != "0":
+            dp[i] += dfs(i+1)
+        
+        if i < n-1 and s[i:i+1] != "0" and int(s[i:i+2]) <= 26:
+            dp[i] += dfs(i+2)
+        return dp[i]
+    
+    return dfs(0)
+```
+
+If there are not nice bounds on you solution (e.g. here we know the count is always non-negative), rather than using an array with an out of bounds value to indicate the problem is not yet solved, we can use an dict:
+
+```python
+def num_decodings(s):
+    n = len(s)
+    dp = {} 
+
+    def dfs(i):
+        #[... same as before ...] 
+        
+        if i in dp:
+            return dp[i]
+        
+        #[... same as before ...]
+    
+    return dfs(0)
+```
+
+#### Bottom-up
+
+A bottoms-up approach builds the solution iteratively. The idea is that our recursion is \\(dp[i] = 1_{s[i:i+1] \\text{ is valid}} \\cdot dp[i+1] + 1_{s[i:i+2] \\text{ is valid}} \\cdot dp[i+2]\\), so we iterate from `n-1` to `0` inclusive with the base cases being `dp[n] = 1`.
+
+```python
+def num_decodings(s):
+    n = len(s)
+    dp = [0] * (n+1)
+    dp[n] = 1
+
+    for i in range(n-1, -1, -1):
+        dp[i] = 0
+        if s[i:i+1] != "0":
+            dp[i] += dp[i+1]
+        
+        if i < n-1 and s[i:i+1] != "0" and int(s[i:i+2]) <= 26:
+            dp[i] += dp[i+2]
+
+    return dp[0]
+```
+
+#### Space Optimized
+
+Lastly we can optimize the space usage of our dp table by noticing that at index `i` I only need to store the solution for `i+1` and `i+2`:
+
+tmp dp1 dp2
+
+```python
+def num_decodings(s):
+    n = len(s)
+    temp = 0
+    dp1 = 1 # i+1
+    dp2 = 0 # i+2
+
+    for i in range(n-1, -1, -1):
+        if s[i:i+1] != "0":
+            temp += dp1
+        
+        if i < n-1 and s[i:i+1] != "0" and int(s[i:i+2]) <= 26:
+            temp += dp2
+        
+        dp2 = dp1
+        dp1 = temp 
+        temp = 0
+
+    return dp1
+```
+
+#### Time and Space Analysis
+
+The time/space analysis for each approach is given below:
+
+| Approach                   | Time Complexity | Space Complexity | Explanation                                                                 |
+|----------------------------|-----------------|------------------|-----------------------------------------------------------------------|
+| Recursive Brute Force      | O(2^n)           | O(n)             | Explores entire decision tree, see [Backtracking](#backtracking) for more info   |
+| Top-Down DP (Memoization)  | O(n)            | O(n)             | Caches intermediate results during recursion with memoization          |
+| Bottom-Up DP (Tabulation)  | O(n)            | O(n)             | Iteratively fills up dp table                    |
+| Space-Optimized Bottom-Up  | O(n)            | O(1)             | Optimizes tabulation by effectively having a constant size dp table    |
 
 ### Sliding Window
 
