@@ -581,6 +581,8 @@ TODO
 
 ### Dynamic Programming
 
+#### Decode Ways  
+
 Consider the following problem:
 
 We encode a string into a sequence of digits using the mapping `"A" -> "1"`,  `"2" -> "2"` ... `"Z" -> "26"`. Given a string `s` containing only digits, return the number of ways to decode it. E.g. Given `s = "1012"` we can decode it as `10, 1, 2 = "JAB"` or `10, 12 = "JL"`.
@@ -599,7 +601,7 @@ At each split, we can either take a substring of length 1 or 2 subject to the co
 - `len(substr) == 1` and `substr != "0"`
 - `len(substr) == 2` and `substr[0] != "0"` and `int(substr) <= 26`
 
-#### Recursive Solution
+##### Recursive Solution
 
 The first approach to a dynamic programming problem is the brute force recursive solution. In this case we want to follow a path in the decision tree until we reach a leaf, increase our count, then backtrack.
 
@@ -625,7 +627,7 @@ def num_decodings(s):
     return count
 ```
 
-#### Top-down
+##### Top-down
 
 Next, we want to avoid repeated work. For example with `s = "1012"` the recursion stack looks like:
 
@@ -710,7 +712,7 @@ def num_decodings(s):
     return dfs(0)
 ```
 
-#### Bottom-up
+##### Bottom-up
 
 A bottoms-up approach builds the solution iteratively. The idea is that our recursion is \\(dp[i] = 1_{s[i:i+1] \\text{ is valid}} \\cdot dp[i+1] + 1_{s[i:i+2] \\text{ is valid}} \\cdot dp[i+2]\\), so we iterate from `n-1` to `0` inclusive with the base cases being `dp[n] = 1`.
 
@@ -731,7 +733,7 @@ def num_decodings(s):
     return dp[0]
 ```
 
-#### Space Optimized
+##### Space Optimized
 
 Lastly we can optimize the space usage of our dp table by noticing that at index `i` I only need to store the solution for `i+1` and `i+2`:
 
@@ -758,7 +760,7 @@ def num_decodings(s):
     return dp1
 ```
 
-#### Time and Space Analysis
+##### Time and Space Analysis
 
 The time/space analysis for each approach is given below:
 
@@ -768,6 +770,81 @@ The time/space analysis for each approach is given below:
 | Top-Down DP (Memoization)  | O(n)            | O(n)             | Caches intermediate results during recursion with memoization          |
 | Bottom-Up DP (Tabulation)  | O(n)            | O(n)             | Iteratively fills up dp table                    |
 | Space-Optimized Bottom-Up  | O(n)            | O(1)             | Optimizes tabulation by effectively having a constant size dp table    |
+
+#### Maximum Product Subarray
+
+Given an integer array nums, find a subarray that has the largest product within the array and return it. We don't allow empty subarrays, and do allow negative integers. Here are two approaches whose patterns are applicable to other problems:
+
+##### Kadane's Algorithm
+
+If we don't have products but rather have sums, at each index i we can:
+
+1. Start a new subarray of only `nums[i]`
+2. Extend the current subarray with `nums[i]`
+
+So we need to track the maximum sum ending at index `i` as well as the overall result. This leads to the algorithm:
+
+```python
+def max_sum_subarray(nums):
+    n = len(nums)
+    max_sum = res = nums[0]
+
+    for i in range(1, n):
+        max_sum = max(nums[i], max_sum + nums[i])
+        res = max(res, max_sum)
+    return res
+```
+
+For products the idea is the same, except that we also need to track the minimum product so far as a negative `nums[i]` can flip the min/max products. Formally this is the max/min product subarray ending at index `i`.
+
+```python
+def max_product_subarray(nums):
+    n = len(nums)
+    res = max_prod = min_prod = nums[0]
+
+    for i in range(1, n):
+        if nums[i] < 0:
+            # Swap max/min products
+            max_prod, min_prod = min_prod, max_prod
+
+        max_prod = max(nums[i], nums[i] * max_prod) 
+        min_prod = min(nums[i], nums[i] * min_prod) 
+        res = max(res, max_prod)
+
+    return res
+```
+
+##### Prefix and Suffix sums
+
+An alternate approach is to track the running product iterating over the array in both directions. The edge case to be careful about is that if the prefix/suffix is ever zero, we need to reset the running product to the current element. Consider `nums = [1,2,-3,4]` as to why we need to look at both directions, where `prefix[i] = prod(num[:i+1])` and `suffix[i] = prod(nums[(n-1)-i:])`:
+
+```python
+prefix = [1, 2, -6, -24]
+suffix = [4, -12, -24, -24]
+```
+
+So we would miss the max product if we only scanned in one direction.
+
+```python
+def max_product_subarray(nums):
+    n = len(nums)
+    max_prod = nums[0]
+    prefix = suffix = 1
+
+    for i in range(n):
+        if prefix == 0:
+            prefix = 1
+       
+        if suffix == 0:
+            suffix = 1
+
+        prefix *= nums[i]
+        suffix *= nums[(n-1) - i]
+
+        max_prod = max(max_prod, prefix, suffix)
+
+    return max_prod
+```
 
 ### Sliding Window
 
