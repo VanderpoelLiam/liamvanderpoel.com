@@ -844,6 +844,130 @@ def max_product_subarray(nums):
     return max_prod
 ```
 
+#### Longest Increasing Subsequence
+
+Consider the problem: Given an integer array nums, return the length of the longest strictly increasing subsequence. Recall a subsequence is a subset created by deleting zero or more elements e.g. `[1, 2, 3]` is a subsequence of `nums = [9,1,4,2,3,3,7]`.
+
+The difficulty in this problem is that the natural recursive solution does not naturally lead to a dynamic programming solution. Take `nums = [1, 0, 2]` where the LIS is `[1,2]` or `[0,2]` and they both have length `2`. The decision tree is to consider all subsequences that are strictly increasing, at each level `i` we either include or don't include `nums[i]`:
+
+```text
+                        []
+            [1]                   []               i = 0
+               [1]          [0]        []          i = 1
+           [1,2]  [1]   [0,2]  [0]  [2]   []       i = 2
+```
+
+The natural DFS solution to explore this decision tree is:
+
+```python
+def length_of_LIS(nums):
+    n = len(nums)
+
+    def dfs(i, subseq):
+        if i == n:
+            return len(subseq)
+        
+        res = dfs(i+1, subseq)
+
+        if not subseq or subseq[-1] < nums[i]:
+            res = max(res, dfs(i+1, subseq + [nums[i]]))
+
+        return res
+    
+    return dfs(0, []) 
+```
+
+As there are \\(2^n\\) paths, and we compute the length of the subsequence at the end of each path this has runtime \\(O(n\cdot 2^n)\\). We can be slightly more efficient with runtime (O(2^n)\\) if we update the length of the subsequence as we go, but this does not nicely lead to a DP solution:
+
+```python
+def length_of_LIS(nums):
+    n = len(nums)
+
+    def dfs(i, len_subseq, max_elem):
+        if i == n:
+            return len_subseq
+        
+        res = dfs(i+1, len_subseq, max_elem)
+
+        if max_elem < nums[i]:
+            res = max(res, dfs(i+1, 1 + len_subseq, nums[i]))
+
+        return res
+    
+    return dfs(0, 0, -math.inf) 
+```
+
+Instead we need to rewrite our decision tree to represent the state in a way that is easier to memoise, and track the length of the path as we explore the decision tree rather than at the end. We have that `dfs(i,j)` is the length of the longest strictly increasing subsequence starting at index `i` and with index `j` the last element of the subsequence (therefore also the maximum value seen so far). Below is the same decision tree as above for  `nums = [1, 0, 2]`, but we provide both the subsence and its `i,j` representation:
+
+```text
+                                 []=(0, -1)
+                [1]=(1,0)                                 []=(1,-1)               
+                    [1]=(2,0)                  [0]=(2,1)              []=(2,-1)          
+            [1,2]=(3,2)  [1]=(3,0)   [0,2]=(3,2)  [0]=(3,1)  [2]=(3,2)   []=(3,-1)       
+```
+
+This leads to the recursive solution:
+
+```python
+def length_of_LIS(nums):
+    n = len(nums)
+
+    def dfs(i, j):
+        if i == n:
+            return 0
+        
+        res = dfs(i+1, j)
+
+        if j == -1 or nums[j] < nums[i]:
+            res = max(res, 1 + dfs(i+1, i))
+
+        return res
+    
+    return dfs(0, -1) 
+```
+
+With this representation we more clearly see the repeated work e.g. (3,2) appears 3 times. To avoid this repeated work with memoisation we notice that there are `n+1` choices for `i` and `n` choices for `j`. This leads to the algorithm:
+
+```python
+def length_of_LIS(nums):
+    n = len(nums)
+    dp = [[-1]*n]*(n+1)
+
+    def dfs(i, j):
+        if i == n:
+            return 0
+        
+        if dp[i][j] != -1:
+            return dp[i][j]
+
+        res = dfs(i+1, j)
+
+        if j == -1 or nums[j] < nums[i]:
+            res = max(res, 1 + dfs(i+1, i))
+
+        dp[i][j] = res
+        return res
+    
+    return dfs(0, -1) 
+```
+
+This has both time and space complexity of \\(O(n^2)\\). We can optimize the solution further by iterating through the array backwards and storing the solution starting at index `i` in `dp[i]`:
+
+```python
+def length_of_LIS(nums):
+    n = len(nums)
+    dp = [1] * n
+        
+    for i in range(n-1, -1, -1):
+        for j in range(i+1, n):
+            if nums[j] > nums[i]:
+                dp[i] = max(dp[i], 1 + dp[j])
+    
+    return max(dp)
+```
+
+This leads to a pretty optimal solution with time complexity \\(O(n^2)\\) and space complexity \\(O(n)\\).
+
 ### Sliding Window
 
 The general idea is that we are given an array or a string and we want to find some sub-range that meets some criteria e.g. max sum, longest substring with specific chars, number of distinct elements, etc...
