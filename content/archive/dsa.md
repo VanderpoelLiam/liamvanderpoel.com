@@ -735,9 +735,7 @@ def num_decodings(s):
 
 ##### Space Optimized
 
-Lastly we can optimize the space usage of our dp table by noticing that at index `i` I only need to store the solution for `i+1` and `i+2`:
-
-tmp dp1 dp2
+Lastly we can optimize the space usage of our dp table by noticing that at index `i` we only need to store the solution for `i+1` and `i+2`:
 
 ```python
 def num_decodings(s):
