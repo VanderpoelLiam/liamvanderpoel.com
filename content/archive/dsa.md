@@ -968,6 +968,40 @@ def length_of_LIS(nums):
 
 This leads to a pretty optimal solution with time complexity \\(O(n^2)\\) and space complexity \\(O(n)\\).
 
+### 2D Dynamic Programs
+
+A important mistake not to make when initializing a 2D dynamic program in Python is say we want a `m x n` grid. This is correct:
+
+```python
+dp = [[-1] * n for _ in range(m)]
+```
+
+while this leads to all rows pointing to the same object in memory:
+
+```python
+dp = [[-1] * n] * m
+```
+
+We can test this with the following code:
+
+```python
+>>> m = 3
+>>> n = 4
+>>> dp = [[-1] * n for _ in range(m)]
+>>> dp[0][0] = 99
+>>> dp
+[[99, -1, -1, -1], [-1, -1, -1, -1], [-1, -1, -1, -1]]
+>>> dp[0] is dp[1]
+False
+
+>>> dp = [[-1] * n] * m
+>>> dp[0][0] = 99
+>>> dp
+[[99, -1, -1, -1], [99, -1, -1, -1], [99, -1, -1, -1]]
+>>> dp[0] is dp[1]
+True
+```
+
 ### Sliding Window
 
 The general idea is that we are given an array or a string and we want to find some sub-range that meets some criteria e.g. max sum, longest substring with specific chars, number of distinct elements, etc...
