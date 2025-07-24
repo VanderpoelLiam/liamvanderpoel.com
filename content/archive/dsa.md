@@ -579,6 +579,63 @@ TODO
 
 ## Algorithms
 
+### Bit Manipulation
+
+In Python we can convert between int and bit representation:
+
+```python
+>>> bin(10)    
+'0b1010'
+>>> int('1010', 2)
+10
+```
+
+| Operator     | Symbol | Example |
+|--------------|--------|----------------------------------|
+| AND        | `&`    | `5 & 3 = 0b101 & 0b011 = 0b001 = 1`      |
+| OR         | `\|`    | `5 \| 3 = 0b101 \| 0b011 = 0b111 = 7`      |
+| XOR        | `^`    | `5 ^ 3 = 0b101 ^ 0b011 = 0b110 = 6`      |
+| Left Shift | `<<`   | `5 << 1 = 0b101 << 1 = 0b1010 = 10`      |
+| Right Shift| `>>`   | `5 >> 1 = 0b101 >> 1 = 0b10 = 2`         |
+| NOT        | `~`    | `~5 = ~0b101 = -0b110 = -6` (This is due to Two’s complement representation of signed ints)              |
+
+There are a few patterns that are relevant for Leetcode problems but this is not a topic I would spend much time on.
+
+#### Find Unique Number
+
+Given a list of nums where every number appear twice except one number which appears once. Return the unique number. E.g. for `nums = [7,6,6,7,8]` we would return `8`. The idea is to consider the integers in their binary representation:
+
+```text
+`nums = [
+    7, # 0b0111
+    6, # 0b0110
+    6, # 0b0110
+    7, # 0b0111
+    8  # 0b1000
+]
+```
+
+Taking an XOR of all numbers results in the duplicate bits being cancelled out, and we therefore only keep the unique number.
+
+```python
+def unique_num(nums):
+    res = 0
+    for num in nums:
+        res ^= num
+    return res
+```
+
+#### Set, Check, or Toggle a bit
+
+Another set of problems require the ability to perform an operation on a specific bit:
+
+| Operation       | Code                          | Description                                |
+|----------------|-------------------------------|--------------------------------------------|
+| **Set bit to 1**     | `n \| (1 << i)`                | Sets the `i`-th bit to `1`                  |
+| **Set bit to 0**   | `n & ~(1 << i)`               | Sets the `i`-th bit `0`        |
+| **Check bit**   | `(n >> i) & 1`  | Returns whether the `i`-th bit is `1`       |
+| **Toggle bit**  | `n ^ (1 << i)`                | Flips the `i`-th bit                        |
+
 ### Dynamic Programming
 
 #### Decode Ways  
