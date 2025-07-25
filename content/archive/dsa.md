@@ -579,6 +579,21 @@ TODO
 
 ## Algorithms
 
+### Intervals
+
+Let an interval be represented as a list of two integers of the form `interval = [start, end]`. Useful helper functions for such problems are:
+
+```python
+def intersect(i1, i2):
+    # Return True if i1 intersects i2
+    return (i1[0] <= i2[0] <= i1[1]) or (i2[0] <= i1[0] <= i2[1])
+
+
+def merge(i1, i2):
+    # Return the merger of i1 and i2
+    return [min(i1[0], i2[0]), max(i1[1], i2[1])]
+```
+
 ### Bit Manipulation
 
 In Python we can convert between int and bit representation:
