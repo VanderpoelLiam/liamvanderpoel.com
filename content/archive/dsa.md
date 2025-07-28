@@ -581,17 +581,56 @@ TODO
 
 ### Intervals
 
-Let an interval be represented as a list of two integers of the form `interval = [start, end]`. Useful helper functions for such problems are:
+Let an interval be represented as a list of two integers of the form `interval = [start, end]`. To merge two intervals:
+
+```python
+def merge(i1, i2):
+    return [min(i1[0], i2[0]), max(i1[1], i2[1])]
+```
+
+To check for intersection depends if we allow endpoints to overlap. For example the following two intervals overlap regardless of the definition:
+
+```text
+[1,     3]
+    [2,     4]
+```
+
+However the following case depends on if we allow a common point or not:
+
+```text
+[1,     2]
+       [2,     3]
+```
+
+The check in words are `does interval 1 end before interval 2 starts` or `does interval 1 end before interval 2 starts` if either condition is met
+then we have no overlap, so we negate the above statement to check for overlap.
+
+If we are strict and do not allow any common points:
 
 ```python
 def intersect(i1, i2):
-    # Return True if i1 intersects i2
-    return (i1[0] <= i2[0] <= i1[1]) or (i2[0] <= i1[0] <= i2[1])
+    # Return True if i1 and i2 overlap
+    # We do not allow any point in common
+    return not (i1[1] < i2[0] or i2[1] < i1[0])
 
+>>> intersect([1, 3], [2, 4])
+True
+>>> intersect([1, 2], [2, 3])
+True
+```
 
-def merge(i1, i2):
-    # Return the merger of i1 and i2
-    return [min(i1[0], i2[0]), max(i1[1], i2[1])]
+If we allow a common point then:
+
+```python
+def intersect(i1, i2):
+    # Return True if i1 and i2 overlap
+    # We allow a endpoints in common
+    return not (i1[1] <= i2[0] or i2[1] <= i1[0])
+
+>>> intersect([1, 3], [2, 4])
+True
+>>> intersect([1, 2], [2, 3])
+False
 ```
 
 ### Bit Manipulation
