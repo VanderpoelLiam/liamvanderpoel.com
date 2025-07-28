@@ -256,7 +256,7 @@ We should have used 308 samples to get our desired confidence levels, instead we
 def simulate_ab_test(N, lift):
     """Simulate our drug trial AB test and return the p-value."""
     mu, sigma = 50, 2
-    N /= 2 # Split the total samples evenly between the groups
+    N //= 2 # Split the total samples evenly between the groups
     A = np.random.normal(mu, sigma, N)
     B = np.random.normal(mu + lift, sigma, N)
     z_hat = (B.mean() - A.mean()) / np.sqrt((A.var() + B.var()) / N)
@@ -290,90 +290,44 @@ Hopefully you can see from the previous section how important it is to pick a la
 Suppose we run the same experiment as above where there is no difference between the groups, but now we check the significance level after each observation. We stop the experiment early if we see a significant result, otherwise we continue until we have completed 308 total observations:
 
 ```python
-TODO: Update above code.
-```
+def compute_p_value(A, B, N):
+    z_hat = (B.mean() - A.mean()) / np.sqrt((A.var() + B.var()) / N)
+    return z_to_p(z_hat, one_sided=True)
 
-Without peeking we have around a `5%` false positive rate, with peeking it is now `X%`!!!
-
-TODO: Rework this entire section to make the point dont peek, calculate min-detectable effect if must have some feedback during experiment, if want to have early stopping then have to go down the sequential analysis rabbit hole see x, y, z articles. 
-
-<!-- Monte Carlo simulations can also provide insight into another big problem when running A/B tests which is early stopping.
-
-### Early Stopping
-
-How do we now proceed? Do we throw more test subjects at the experiment until we have 74 samples? The problem is something called `repeated significance testing errors`. Repeatedly checking the results by running our statistical test multiple times causes the false positive rate to skyrocket. Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, else you might get a false positive like we achieved earlier.
-
-The three articles I draw from in this section are [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html), [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html) and [A/B Testing Rigorously (without losing your job)](https://elem.com/~btilly/ab-testing-multiple-looks/part1-rigorous.html).
-
-TODO: Explain problem of peeking at the data and point to [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html)
-
-TODO: How to avoid invalidating statistical significance by stopping experiments early or peeking at results. [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html).
-
-TODO: Explain connection to sequential analysis, but that beyond scope this article. But in short, probably fine to continue adding test subject 
-
-### Minimum Effect Size
-
-If we go back to the paper [So you want to run an experiment, now what? Some Simple Rules of Thumb for Optimal Experimental Design](https://www.nber.org/system/files/working_papers/w15701/w15701.pdf) we can determine how large of an effect can be detected given the current sample size:
-
-$$
-\delta = (z_{\alpha} + z_{\beta}) \cdot \sqrt{\frac{\sigma_A^2}{n_A} + \frac{\sigma_B^2}{n_B}}
-$$
-
-In Python this looks like:
-
-```python
-from scipy.stats import norm
-
-def minimum_detectable_effect_size(var_A, var_B, n_A, n_B, alpha, power, one_sided):
-    """Calculate the minimum detectable effect size.
-
-    Returns the absolute difference between the two means that is detectable
-    with the given parameters.
-
-    Args:
-        var_A (float): The baseline variance.
-        var_B (float): The treatment variance. 
-        n_A (int): The number of samples in the first experiment.
-        n_B (int): The number of samples in the second experiment.
-        alpha (float): The false positive rate we are willing to accept.
-        power (float): (1-power) is the false negative rate we are willing to accept.
-        one_sided (bool): Whether the alternative hypothesis is directional.
-
-    Returns:
-        float: The minimum detectable effect size.
-    """
-    if one_sided:
-        z_alpha = norm.ppf(1 - alpha)
-    else:
-        z_alpha = norm.ppf(1 - alpha / 2)
-
-    z_power = norm.ppf(power)
+def simulate_ab_test(N, lift, peeking_interval, alpha):
+    """Simulate our drug trial AB test and if p-value is less than alpha, looking at the p-value every peeking_interval samples."""
+    mu, sigma = 50, 2
+    N //= 2 # Split the total samples evenly between the groups
+    peeking_interval = max(peeking_interval // 2, 1)
+    A = np.random.normal(mu, sigma, N)
+    B = np.random.normal(mu + lift, sigma, N)
     
+    for i in range(peeking_interval, N+peeking_interval, peeking_interval):
+        if i < 2:
+            continue
+        if compute_p_value(A[:i], B[:i], i) < alpha:
+            return True
+    return False
+    
+alpha = 0.05
+N = 308 
+lift = 0
+num_simulations = 10000
 
-    delta = (z_alpha + z_power) * math.sqrt(var_A / n_A + var_B / n_B)
-    return delta
+for peeking_interval in [1, N // 10, N // 5, N // 2, N]:
+    simulation_results = [simulate_ab_test(N, lift, peeking_interval, alpha) for _ in range(num_simulations)]
+    fp_rate = np.sum(simulation_results) / num_simulations
+    print(f"Estimated false positive rate: {fp_rate:.2%} for {N} samples, peeking at the data {N // peeking_interval} times")
+
+>>> "Estimated false positive rate: 43.38% for 308 samples, peeking at the data 308 times"
+>>> "Estimated false positive rate: 18.51% for 308 samples, peeking at the data 10 times"
+>>> "Estimated false positive rate: 14.34% for 308 samples, peeking at the data 5 times"
+>>> "Estimated false positive rate: 8.72% for 308 samples, peeking at the data 2 times"
+>>> "Estimated false positive rate: 5.13% for 308 samples, peeking at the data 1 times"
 ```
 
-and if we run this function on our data:
+Without peeking we have around a `5%` false positive rate, with peeking it can be as high as`43%`!!! Have a look at [How Not To Run an A/B Test](https://www.evanmiller.org/how-not-to-run-an-ab-test.html) for a more detailed explanation on why this occurs, but in short the best way to avoid this issue is to not repeatedly test for significance. We should fix the sample size in advance before running the experiment, and not report any significance results until the experiment is over. We should especially not use the a significant result to stop the test, as this causes the false positive rate to skyrocket.
 
-```python
-alpha = 0.05
-power = 0.8
-
-min_delta = minimum_detectable_effect_size(var_A, var_B, N, N, alpha, power, one_sided=True) 
-
-print(f"Minimum detectable effect size: {min_delta:.2f}")
-print(f"Actual effect size: {mu_B - mu_A:.2f}")
-
->>> "Minimum detectable effect size: 1.53"
->>> "Actual effect size: 1.50"
-``` -->
+If we want the ability to stop early, we need to look into sequential sampling. This is a whole other rabbit hole beyond the scope of this article. If you want a simple approach then look no further than [Simple Sequential A/B Testing](https://www.evanmiller.org/sequential-ab-testing.html), whereas if you want a full mathematical explanation see the paper [Always Valid Inference: Bringing Sequential Analysis to A/B Testing](https://ia600900.us.archive.org/26/items/arxiv-1512.04922/1512.04922.pdf).
 
 {{< reflist >}}
-
-<!-- Relevant links:
-
-- [Monte Carlo Power Analysis](https://deliveroo.engineering/2018/12/07/monte-carlo-power-analysis.html)
-- [The Unreasonable Effectiveness of Monte Carlo Simulations in A/B Testing](https://bytepawn.com/unreasonable-effectiveness-monte-carlo-ab-testing.html)
-- [Building intuition for p-values and statistical significance](https://bytepawn.com/building-intuition-p-values-statistical-significance.html#building-intuition-p-values-statistical-significance)
-- [Beautiful A/B testing](https://bytepawn.com/beautiful-ab-testing.html#beautiful-ab-testing) -->
