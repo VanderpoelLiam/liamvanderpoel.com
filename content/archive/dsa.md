@@ -633,6 +633,45 @@ True
 False
 ```
 
+#### Concurrent meetings
+
+Let `intervals` be a list of all my meetings, what is the minimum number of days I need to schedule all meetings without a conflict? E.g. `intervals = [[1,3], [3,6], [1,7], [2,3]]` requires `3` days. Note: `[1,3]` and `[3,6]` are not considered to overlap at `3`.
+
+The trick is to draw the following picture:
+
+```text
+0. 1. 2. 3. 4. 5. 6. 7. 8. 
+  [1     3]
+        [3        6]
+  [1                 7]    
+     [2  3]
+```
+
+The minimum number of days to schedule all meetings without a conflict is the same as the maximum number of concurrent meetings. So the problem becomes how to efficiently track how many meetings are concurrent at each point in time. This is efficiently done by counting how many meetings start and end on each day with a default dict:
+
+```python
+from collections import defaultdict
+
+def num_concurrent_meetings(intervals):
+    meetings = defaultdict(int)
+
+    # Meetings tracks me how many meetings start/end each day
+    for i in intervals:
+        meetings[i.start] += 1
+        meetings[i.end] -= 1
+    
+    res = 0
+    ongoing_meetings = 0
+    for day, count in sorted(meetings.items()):
+        # Track concurrent meetings each day 
+        ongoing_meetings += count
+        res = max(res, ongoing_meetings)
+    
+    return res
+```
+
+If we now say that we want to be strict and that `[1,3]` and `[3,6]` do overlap at `3`, all we do is pretend that the end time of our meeting in 1 unit later. E.g. we treat `[1,3]` like `[1,4]` in our algorithm above.
+
 ### Bit Manipulation
 
 In Python we can convert between int and bit representation:
