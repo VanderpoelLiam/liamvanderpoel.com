@@ -1683,3 +1683,5 @@ def multi_source_bfs(grid):
             grid[ni][nj] = 1 + grid[i][j]
             queue.append((ni, nj))
 ```
+
+The time & space complexity is the same as for vanilla BFS.
