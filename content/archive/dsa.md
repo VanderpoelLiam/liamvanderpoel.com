@@ -573,10 +573,6 @@ def find_kth_largest(nums, k):
 
 The time complexity is now \\(O(n + k \cdot \log{n})\\) as our heap has size `n` and we pop `k-1` elements. The space complexity now depends on `n` as our heap has size  \\(O(n)\\).
 
-### Graphs
-
-TODO
-
 ## Algorithms
 
 ### Intervals
@@ -1634,4 +1630,56 @@ def dfs_recursive(root):
                 dfs(u, visited)
 
     return dfs(root, set())
+```
+
+#### Get neighbours in grid with obstacles
+
+To get the neighbours of a node at index `i, j` in an `m x n` grid where we have obstacles e.g. water, wall, ... when the grid is a specific value e.g. `-1` in the below example:
+
+```python
+def get_valid_neighbours(grid, i, j):
+    m, n = len(grid), len(grid[0])
+    for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        ni, nj = i + di, j + dj
+        if 0 <= ni < m and 0 <= nj < n and grid[ni][nj] != -1:
+            yield ni, nj
+```
+
+Note: `yield` means the function returns a generator. This is more memory-efficient as we don't need to store all the neighbours in memory and allows lazy evaluation.
+
+#### Multi-Source Breadth-First Search
+
+This algorithm is useful for problems where you have multiple sources and you want to know the shortest distance from each node to a source. Consider the example of a `m x n` grid where `0` is a source and `1` is a a cell and we want to update all `1`s with their distance to the nearest `0` in place:
+
+```python
+from collections import deque
+
+def get_unvisited_neighbours(grid, i, j):
+    m, n = len(grid), len(grid[0])
+    for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        ni, nj = i + di, j + dj
+
+        # Here grid[ni][nj] == -1 means the node (ni, nj) is unvisited
+        if 0 <= ni < m and 0 <= nj < n and grid[ni][nj] == -1:
+            yield ni, nj
+
+def multi_source_bfs(grid):
+    m, n = len(grid), len(grid[0]) 
+    queue = deque()
+
+    # Init queue with all sources
+    for i in range(m):
+        for j in range(n):
+            if grid[i][j] == 0:
+                queue.append((i, j))
+            else:
+                # Mark cell as unvisited
+                grid[i][j] == -1
+    
+    # Perform BFS from all sources at the same time
+    while queue:
+        i, j = queue.popleft()
+        for ni, nj in get_unvisited_neighbours(grid, i, j):
+            grid[ni][nj] = 1 + grid[i][j]
+            queue.append((ni, nj))
 ```
