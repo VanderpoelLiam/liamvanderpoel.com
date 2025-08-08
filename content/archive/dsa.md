@@ -1632,6 +1632,8 @@ def dfs_recursive(root):
     return dfs(root, set())
 ```
 
+The visited set can also be stored globally.
+
 #### Get neighbours in grid with obstacles
 
 To get the neighbours of a node at index `i, j` in an `m x n` grid where we have obstacles e.g. water, wall, ... when the grid is a specific value e.g. `-1` in the below example:
@@ -1685,3 +1687,67 @@ def multi_source_bfs(grid):
 ```
 
 The time & space complexity is the same as for vanilla BFS.
+
+#### Finding a cycle in a graph
+
+The idea is to use DFS to find a cycle, the algorithm differs depending if the graph is directed or undirected. Assume we have the `n` nodes `0, 1, ..., n-1`, and edges is an adjacency list i.e. `edges[v]` are all the neigbours of node `v`.
+
+For a directed graph:
+
+```python
+path = set() # Nodes visited on current DFS traversal
+visited = set() # Nodes visited on all DFS traversals
+
+def has_cycle(root):
+    # Return True if there is a cycle on the DFS 
+    # traversal starting at root
+
+    if root in path:
+        return True
+    
+    if root in visited:
+        return False
+        
+    visited.add(root)
+    path.add(root)
+    
+    for u in edges[root]:
+        if has_cycle(u):
+            return True
+    
+    path.remove(root)
+    return False
+
+def graph_has_cycle(n, edges):
+    for node in range(n):
+        if has_cycle(node):
+            return True
+
+    return False
+```
+
+For an undirected graph it is not as simple as replacing an edge `1 - 2` with two directed edges `1 -> 2, 2 -> 1` and using the above algorithm as this makes every graph look like it has a cycle. Instead we run a DFS traversal where we recurse on every non-parental neigbour, that way if we ever see a duplicate node, it must be caused by a cycle in the graph:
+
+```python
+visited = set()
+
+def has_cycle(node, parent):
+    if node in visited:
+        return True
+
+    visited.add(node)
+    for u in adj[node]:
+        if u == parent:
+            # Don't recurse on the parent
+            continue
+
+        if has_cycle(u, node):
+            return True
+
+    return False
+
+if has_cycle(0, -1):
+    return False
+
+return True
+```
