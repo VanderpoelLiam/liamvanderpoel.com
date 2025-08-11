@@ -1775,12 +1775,12 @@ The call stack for our dfs traversal would look like (I also track the parent no
 
 ```text
 START dfs(0), order = []
-START dfs(1), order = []
-START dfs(3), order = []
-END dfs(3), order = [3]
-END dfs(1), order = [1, 3]
-START dfs(2), order = [1, 3]
-END dfs(2), order = [2, 1, 3]
+    START dfs(1), order = []
+        START dfs(3), order = []
+        END dfs(3), order = [3]
+    END dfs(1), order = [1, 3]
+    START dfs(2), order = [1, 3]
+    END dfs(2), order = [2, 1, 3]
 END dfs(0), order = [0, 2, 1, 3]
 ```
 
