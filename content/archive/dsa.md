@@ -1751,3 +1751,72 @@ if has_cycle(0, -1):
 
 return True
 ```
+
+#### Topological Sort with DFS
+
+Consider the above case of a directed graph where I want print a topological ordering of the nodes in my graph. Consider the graph:
+
+```text
+0 -> 1 -> 3
+  \       ^
+    -> 2 _|
+```
+
+represented by the adjacency list:
+
+```text
+0: {1, 2}
+1: {3}
+2: {3}
+3: {}
+```
+
+The call stack for our dfs traversal would look like (I also track the parent node so the stack is clearer to understand):
+
+```text
+START dfs(0), order = []
+START dfs(1), order = []
+START dfs(3), order = []
+END dfs(3), order = [3]
+END dfs(1), order = [1, 3]
+START dfs(2), order = [1, 3]
+END dfs(2), order = [2, 1, 3]
+END dfs(0), order = [0, 2, 1, 3]
+```
+
+Therefore to get the desired topological order of our parent being recorded before the child, we need to append to the LHS of the order list after we finish recursing on our children. To efficiently support this, we use a queue, otherwise we would need to create the list and then reverse it.
+
+```python
+path = set() # Nodes visited on current DFS traversal
+visited = set() # Nodes visited on all DFS traversals
+order = deque() # Topological ordering of nodes in the graph
+
+def has_cycle(root):
+    # Return True if there is a cycle on the DFS 
+    # traversal starting at root
+
+    if root in path:
+        return True
+    
+    if root in visited:
+        return False
+        
+    visited.add(root)
+    path.add(root)
+    
+    for u in edges[root]:
+        if has_cycle(u):
+            return True
+    
+    path.remove(root)
+    order.appendleft(root)
+    return False
+
+def topological_ordering(n, edges):
+    for node in range(n):
+        if has_cycle(node):
+            # No topological ordering if a cycle exists
+            return []
+
+    return order
+```
