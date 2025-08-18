@@ -1,0 +1,10 @@
+/* Make Python operator keywords (is, not, in) have the same color as general keywords (for) */
+.chroma .ow {
+  --tw-text-opacity: 1;
+  color: rgba(var(--color-primary-600), var(--tw-text-opacity));
+}
+
+.dark .chroma .ow {
+  --tw-text-opacity: 1;
+  color: rgba(var(--color-primary-300), var(--tw-text-opacity));
+} 
