@@ -1,5 +1,5 @@
 ---
-title: "Archive"
+title: "Articles"
 draft: false
 ---
 This is a place for me to organize and keep track of things I've learned.
