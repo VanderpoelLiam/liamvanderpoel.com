@@ -475,6 +475,91 @@ s.remove(1)  # s = {2}
 2 in s       # True
 ```
 
+### Disjoint Sets (Union-Find)
+
+Given a graph on `n` nodes how can we quickly check if two vertices are connected? We need a data structure with two main operations:
+
+1. `find(v)`: Find the connected component containing node `v`
+2. `union(u, v)`: Merge the connected components containing `u` and `v`.
+
+Consider the following graph:
+
+```text
+0 -- 1 -- 2   3 -- 4  5
+```
+
+Lets say we want to be able to efficiently find the connected component for each node, and to add edges to our graph and update this information about connected nodes. The idea is that a connected component in a graph can be represented as the dfs traversal tree of that component. Then we can represent elements being in the same connected component as having the same root in the dfs traversal. E.g. for the above graph we could represent the connected components with the root array:
+
+```python
+root = [0, 0, 0, 3, 3, 5]
+node = [0, 1, 2, 3, 4, 5]
+```
+
+Two nodes are in the same connected component if their root nodes are equal. If we want to add an edge `u -- v` we then need to  merge two connected components with roots `root_u, root_v`. This is done by updating all the nodes with root `root_v` to now be set to `root_u` (which root to be the new root in the combined connected component is arbitrary). This leads to the following functions:
+
+```python
+root = [i for i in range(n)]
+
+def find(u):
+    # Find the connected component containing u
+    return root[u]
+
+def connected(u, v):
+    # Return if nodes u and v are connected
+    return find(u) == find(v)
+
+def union(u, v):
+    # Add an edge between u and v
+    # Merging the connected components if needed
+    root_u, root_v = find(u), find(v)
+    if root_u != root_v:
+        for i, node in enumerate(root):
+            if node == root_v:
+                # Make root_u new root of combined connected component
+                root[i] = root_u
+```
+
+The above implementation has runtime:
+
+| Operation     | Time Complexity |
+|---------------|-----------------|
+| Init          | **O(N)**        |
+| Find          | **O(1)**        |
+| Union         | **O(N)**        |
+| Connected     | **O(1)**        |
+
+There are a few optimizations we can make to this implementation, I think the simplest is to add path compression which makes `union` more efficient at the expense of making `find` less efficient. The idea is that instead of storing the root of each node we just store the parent. As the implementation of `connected` does not change I ignore it. Now `find` needs to recursively traverse the dfs tree backwards to the parent. To make future `find` calls more efficient, we flatten the tree so that all nodes are connected directly to the root, that way the subsequent call to `find` runs in `O(1)` time:
+
+```python
+parent = [i for i in range(n)]
+
+def find(u):
+    # Find the connected component containing u
+    if parent[u] != u:
+        # Flatten tree recursively
+        parent[u] = find(parent(u))
+    return parent[u]
+
+def union(u, v):
+    # Add an edge between u and v
+    # Merging the connected components if needed
+    parent_u, parent_v = find(u), find(v)
+    if parent_u != parent_v:
+        # Connect v to the parent of u
+        parent[v] = parent_u
+```
+
+The runtime is due to the `find` method which flattens our connected component tree, but it only does this when it is called. As union just point a node to its new parent, in the worst case a path could grow to size `O(N)` before find is called on it. This would lead to an `O(N)` runtime call to flatten the tree. The analysis is given in [Top-Down Analysis of Path Compression](https://www.cs.tau.ac.il/~michas/ufind.pdf). In short you can think of it as having the following average runtimes:
+
+| Operation     | Time Complexity |
+|---------------|-----------------|
+| Init          | **O(N)**         |
+| Find          | **O(log N)**     |
+| Union         | **O(log N)**     |  
+| Connected     | **O(log N)**     |
+
+Further optimizations can be done by adding union by rank to ensure we never grow such a worst case path.
+
 ### Heaps and Priority Queues
 
 A priority queue is an abstract data structure that is an array where we each element has a priority and we always pop the highest priority element first regardless of when it was added to the priority queue. A heap is an efficient implementation of a priority queue. It is a complete binary tree satifying the heap property: for every node, the value of its children is greater than or equal to its own value. An example min heap:
