@@ -9,13 +9,11 @@ This is a cheatsheet I made to help me prepare for LeetCode-style coding intervi
 
 Personally I do not think it is worth practicing LeetCode hard problems as the goal during the practice phase is to be exposed to as many different techniques as possible in as little time as possible. Hard problems have a poor "time spent on the problem" to "new technique exposure" ratio. However as a means of checking your understanding of a given technique they can be worthwhile, but only after you have completed all the easy / medium problems in [Neetcode 150](https://neetcode.io/roadmap), [Blind 75](https://www.techinterviewhandbook.org/grind75/), or an equivalent problem set.
 
-## Data Structures
-
-### Lists
+## Lists
 
 Take two lists `a = [1, 3, 2]` and `b = [200, 300, 100]`.
 
-#### Sorting
+### Sorting
 
 We can use the [sorted()](https://docs.python.org/3/library/functions.html#sorted) function to sort a list and create a new object:
 
@@ -54,7 +52,7 @@ c.sort(key=lambda x: x[1])
 [(2, 100), (1, 200), (3, 300)]
 ```
 
-#### Slicing
+### Slicing
 
 The slicing operation for lists is identical to for strings, see [String slicing](#string-slicing). An important note is that slicing creates a shallow copy of the list. See [the docs](https://docs.python.org/3/tutorial/datastructures.html#more-on-lists) for more information.
 
@@ -71,7 +69,7 @@ Common slicing operations for list are:
 [-1, 3, 2]
 ```
 
-### range()
+## range()
 
 The function has the form `range(start, stop, step)`, see [docs](https://docs.python.org/2/library/functions.html#range). We go from start with increment step until the next step would exceed (or be less than for negative step) stop. Examples:
 
@@ -84,7 +82,7 @@ The function has the form `range(start, stop, step)`, see [docs](https://docs.py
 [5, 4, 3, 2, 1]
 ```
 
-### String slicing
+## String slicing
 
 Similar to range for a string `s` we have `s[start:stop]` that goes includes the start element but not the stop element. Examples:
 
@@ -110,7 +108,7 @@ Can optionally include a `step` i.e. `s[start:stop:step]` which increments the i
 "024"
 ```
 
-### Dynamic Arrays
+##  Dynamic Arrays
 
 Implememted as `list` in Python.
 
@@ -125,7 +123,7 @@ Implememted as `list` in Python.
 | Pop last item | `lst.pop()` | O(1) |
 | Pop item at index | `lst.pop(i)` | O(n) |
 
-### Linked Lists
+##  Linked Lists
 
 Python does not have native linked lists, so usually they are defined like:
 
@@ -136,7 +134,7 @@ class ListNode:
         self.next = next
 ```
 
-#### Reversing a Linked List
+### Reversing a Linked List
 
 Define linked list class as above, and you now want to reverse the list:
 
@@ -182,7 +180,7 @@ def reverse_list(head):
 
 This is a common sub-problem for linked list related problems.
 
-#### Fast and Slow Pointers (Floyd's Cycle Detection)
+### Fast and Slow Pointers (Floyd's Cycle Detection)
 
 This algorithm is used for linked list related problems to find a cycle. You have two pointers `fast` and `slow`, we increment `slow` by one step each iteration and `fast` by two steps each iteration. The intuition is that the fast pointer will always catch the slow pointer if a cycle exists. This follows from imagining the slow/fast pointers as two runners on a track running in circles. Intuitively the fast runner will always catch the slow one (given they are running in a loop). But why will this take \\(O(n)\\) time? Let `d` be the size of the gap between the fast and slow pointers. Each iteration, the new gap becomes `d + 1 - 2 = d - 1` as the slow pointer increases the gap by one, and the fast pointer decreases it by 1. This means they will be equal in `d` iterations, and as the longest cycle has length \\(O(n)\\), they will be equal in \\(O(n)\\) time. The algorithm then follows:
 
@@ -199,7 +197,7 @@ def cycle_exists(head):
     return False
 ```
 
-#### Find duplicate number in array
+### Find duplicate number in array
 
 A special use case of the fast/slow pointer algorithm is to solve the following problem:
 
@@ -261,7 +259,7 @@ def find_duplicate(nums):
     return slow
 ```
 
-#### Doubly Linked Lists
+### Doubly Linked Lists
 
 [OrderedDict](https://docs.python.org/3/library/collections.html#collections.OrderedDict) is like a normal dict in Python but maintains the ordering of elements added to the dict. However since Python 3.7 the in built [dict](https://docs.python.org/3/library/stdtypes.html#dict) class remembers insertion order. The main convenience of the OrderedDict object is the [move_to_end()](https://docs.python.org/3/library/collections.html#collections.OrderedDict.move_to_end) method which will move the key and its associated value to the rightmost (last) position:
 
@@ -285,7 +283,7 @@ The operations and runtime are the same as for a `dict` with a few differences. 
 
 [OrderedDict is implemented as a doubly-linked list combined with a hash table](https://github.com/python/cpython/blob/1f0a294e8c2ff009c6b74ca5aa71da6269aec0dd/Lib/collections/__init__.py#L89) to achieve constant-time `popitem(last=True)` and `move_to_end('key', last=True)` operations.
 
-### Queues
+##  Queues
 
 Queues are FIFO (First In, First Out). Use `deque` implementation from `collections`, do `push(), pop()` using `append(), popleft()`.
 
@@ -302,7 +300,7 @@ queue.popleft()  # 1, queue = deque([2])
 queue = deque([1, 2])  # Initialize deque with [1, 2]
 ```
 
-### Stacks
+##  Stacks
 
 Stacks are LIFO (Last In, First Out). Implemented as lists, do `push(), pop()` using `append(), pop()`.
 
@@ -332,7 +330,7 @@ top_item = stack.pop() # 2, stack = deque([1])
 top = stack[-1] # 1, stack = deque([1])
 ```
 
-### Binary Trees
+##  Binary Trees
 
 A binary tree is a tree where each node has up to two children. A binary search tree (BST) is a binary tree with the additional invariant that the all nodes in the left subtree are less the parent and all nodes in the right subtree are greater than the parent. For example:
 
@@ -346,7 +344,7 @@ A binary tree is a tree where each node has up to two children. A binary search 
       4   7 13
 ```
 
-#### Finding Lowest Common Ancestor
+### Finding Lowest Common Ancestor
 
 The Lowest Common Ancestor (LCA) of two nodes `p` and `q` in a binary tree is the lowest node (i.e. deepest in tree) that is an ancestor of both. Assume both `p` and `q` are in the tree, and the values are all unique for both algorithms below. If we are dealing with a binary tree (i.e. not a BST) the approach is to traverse the tree starting from the root. If the root is equal to `p` or `q` then the root is the LCA. Otherwise we have three cases:
 
@@ -396,7 +394,7 @@ def lca(root, p, q):
     return root
 ```
 
-#### Inorder, Preorder, and Postorder Traversal of a Binary Tree
+### Inorder, Preorder, and Postorder Traversal of a Binary Tree
 
 If we are doing a DFS traversal of a binary tree we have a choice on when we visit the node during our recursion. If we consider the DFS algorithm below we can see the three possible choices we have for when to visit the root:
 
@@ -420,11 +418,11 @@ In short:
 | Preorder       | Root → Left Subtree → Right Subtree    |
 | Postorder      | Left Subtree → Right Subtree → Root    |
 
-### Hash Maps / Sets
+##  Hash Maps / Sets
 
 Sets in Python are implemented as a hash map, so the time complexities are the same for both. The [docs](https://wiki.python.org/moin/TimeComplexity) state that "The Average Case assumes the keys used in parameters are selected uniformly at random from the set of all keys.", so unless we are adversely selecting keys we can assume the average runtime. Note hashmaps and hashtables are the same data structure, called a `dict` in Python.
 
-#### Hash Maps
+### Hash Maps
 
 | Operation                | Python Code              | Time Complexity |
 |-------------------------|--------------------------|-----------------|
@@ -452,7 +450,7 @@ d['a']          # 42
 d.pop('b')      # Removes and returns 2
 ```
 
-#### Sets
+### Sets
 
 | Operation                | Python Code            | Time Complexity |
 |-------------------------|------------------------|-----------------|
@@ -475,7 +473,7 @@ s.remove(1)  # s = {2}
 2 in s       # True
 ```
 
-### Disjoint Sets (Union-Find)
+##  Disjoint Sets (Union-Find)
 
 Given a graph on `n` nodes how can we quickly check if two vertices are connected? We need a data structure with two main operations:
 
@@ -560,7 +558,7 @@ The runtime is due to the `find` method which flattens our connected component t
 
 Further optimizations can be done by adding union by rank to ensure we never grow such a worst case path.
 
-### Heaps and Priority Queues
+##  Heaps and Priority Queues
 
 A priority queue is an abstract data structure that is an array where we each element has a priority and we always pop the highest priority element first regardless of when it was added to the priority queue. A heap is an efficient implementation of a priority queue. It is a complete binary tree satifying the heap property: for every node, the value of its children is greater than or equal to its own value. An example min heap:
 
@@ -601,7 +599,7 @@ The time complexity of the heap operations are:
 | Pop smallest item           | `heapq.heappop(nums)`               | O(log n)        |
 | Peek at smallest item       | `nums[0]`                            | O(1)            |
 
-#### Priority Queue Example - K Closest Points to Origin
+### Priority Queue Example - K Closest Points to Origin
 
 Suppose we are given a list of `points` on the 2D plane and we want to efficiently return the `k`'th closest points to the origin. We would want to initialize a priority queue using a min-heap where the priority is distance to the origin. What entries should we add to our heap to ensure the closest point to the origin is a the top of the heap? The implementation details are explained in [Priority Queue Implementation Notes](https://docs.python.org/3/library/heapq.html#priority-queue-implementation-notes), but in short add entries of the form `[priority, value]` to the heap. For example in our case we would store `[dist to origin, x, y]` in our min-heap, implemented as:
 
@@ -620,11 +618,11 @@ for x, y in points:
 heapq.heapify(min_heap)
 ```
 
-#### Kth Largest Element in an Array
+### Kth Largest Element in an Array
 
 There is a trick to using a heap to find the `k`'th largest element in an array `nums` using a heap. There are two approaches depending if we use a min-heap or a max-heap:
 
-##### Min-Heap approach
+#### Min-Heap approach
 
 The idea is that we want the min-heap to contain the `k`'th largest elements seen so far. This is achieved by iteratively adding each number in nums to the min-heap and popping the root each time the list grows larger than `k`. After we have iterated over nums, the min-heap contains the `k` largest elements in nums in increasing order:
 
@@ -658,9 +656,7 @@ def find_kth_largest(nums, k):
 
 The time complexity is now \\(O(n + k \cdot \log{n})\\) as our heap has size `n` and we pop `k-1` elements. The space complexity now depends on `n` as our heap has size  \\(O(n)\\).
 
-## Algorithms
-
-### Intervals
+##  Intervals
 
 Let an interval be represented as a list of two integers of the form `interval = [start, end]`. To merge two intervals:
 
@@ -714,7 +710,7 @@ True
 False
 ```
 
-#### Concurrent meetings
+### Concurrent meetings
 
 Let `intervals` be a list of all my meetings, what is the minimum number of days I need to schedule all meetings without a conflict? E.g. `intervals = [[1,3], [3,6], [1,7], [2,3]]` requires `3` days. Note: `[1,3]` and `[3,6]` are not considered to overlap at `3`.
 
@@ -753,7 +749,7 @@ def num_concurrent_meetings(intervals):
 
 If we now say that we want to be strict and that `[1,3]` and `[3,6]` do overlap at `3`, all we do is pretend that the end time of our meeting in 1 unit later. E.g. we treat `[1,3]` like `[1,4]` in our algorithm above.
 
-### Bit Manipulation
+## Bit Manipulation
 
 In Python we can convert between int and bit representation:
 
@@ -775,7 +771,7 @@ In Python we can convert between int and bit representation:
 
 There are a few patterns that are relevant for Leetcode problems but this is not a topic I would spend much time on.
 
-#### Find Unique Number
+### Find Unique Number
 
 Given a list of nums where every number appear twice except one number which appears once. Return the unique number. E.g. for `nums = [7,6,6,7,8]` we would return `8`. The idea is to consider the integers in their binary representation:
 
@@ -799,7 +795,7 @@ def unique_num(nums):
     return res
 ```
 
-#### Set, Check, or Toggle a bit
+### Set, Check, or Toggle a bit
 
 Another set of problems require the ability to perform an operation on a specific bit:
 
@@ -810,9 +806,9 @@ Another set of problems require the ability to perform an operation on a specifi
 | **Check bit**   | `(n >> i) & 1`  | Returns whether the `i`-th bit is `1`       |
 | **Toggle bit**  | `n ^ (1 << i)`                | Flips the `i`-th bit                        |
 
-### Dynamic Programming
+## Dynamic Programming
 
-#### Decode Ways  
+### Decode Ways  
 
 Consider the following problem:
 
@@ -832,7 +828,7 @@ At each split, we can either take a substring of length 1 or 2 subject to the co
 - `len(substr) == 1` and `substr != "0"`
 - `len(substr) == 2` and `substr[0] != "0"` and `int(substr) <= 26`
 
-##### Recursive Solution
+#### Recursive Solution
 
 The first approach to a dynamic programming problem is the brute force recursive solution. In this case we want to follow a path in the decision tree until we reach a leaf, increase our count, then backtrack.
 
@@ -858,7 +854,7 @@ def num_decodings(s):
     return count
 ```
 
-##### Top-down
+#### Top-down
 
 Next, we want to avoid repeated work. For example with `s = "1012"` the recursion stack looks like:
 
@@ -943,7 +939,7 @@ def num_decodings(s):
     return dfs(0)
 ```
 
-##### Bottom-up
+#### Bottom-up
 
 A bottoms-up approach builds the solution iteratively. The idea is that our recursion is \\(dp[i] = 1_{s[i:i+1] \\text{ is valid}} \\cdot dp[i+1] + 1_{s[i:i+2] \\text{ is valid}} \\cdot dp[i+2]\\), so we iterate from `n-1` to `0` inclusive with the base cases being `dp[n] = 1`.
 
@@ -964,7 +960,7 @@ def num_decodings(s):
     return dp[0]
 ```
 
-##### Space Optimized
+#### Space Optimized
 
 Lastly we can optimize the space usage of our dp table by noticing that at index `i` we only need to store the solution for `i+1` and `i+2`:
 
@@ -989,7 +985,7 @@ def num_decodings(s):
     return dp1
 ```
 
-##### Time and Space Analysis
+#### Time and Space Analysis
 
 The time/space analysis for each approach is given below:
 
@@ -1000,11 +996,11 @@ The time/space analysis for each approach is given below:
 | Bottom-Up DP (Tabulation)  | O(n)            | O(n)             | Iteratively fills up dp table                    |
 | Space-Optimized Bottom-Up  | O(n)            | O(1)             | Optimizes tabulation by effectively having a constant size dp table    |
 
-#### Maximum Product Subarray
+### Maximum Product Subarray
 
 Given an integer array nums, find a subarray that has the largest product within the array and return it. We don't allow empty subarrays, and do allow negative integers. Here are two approaches whose patterns are applicable to other problems:
 
-##### Kadane's Algorithm
+#### Kadane's Algorithm
 
 If we don't have products but rather have sums, at each index i we can:
 
@@ -1043,7 +1039,7 @@ def max_product_subarray(nums):
     return res
 ```
 
-##### Prefix and Suffix sums
+#### Prefix and Suffix sums
 
 An alternate approach is to track the running product iterating over the array in both directions. The edge case to be careful about is that if the prefix/suffix is ever zero, we need to reset the running product to the current element. Consider `nums = [1,2,-3,4]` as to why we need to look at both directions, where `prefix[i] = prod(num[:i+1])` and `suffix[i] = prod(nums[(n-1)-i:])`:
 
@@ -1075,7 +1071,7 @@ def max_product_subarray(nums):
     return max_prod
 ```
 
-#### Longest Increasing Subsequence
+### Longest Increasing Subsequence
 
 Consider the problem: Given an integer array nums, return the length of the longest strictly increasing subsequence. Recall a subsequence is a subset created by deleting zero or more elements e.g. `[1, 2, 3]` is a subsequence of `nums = [9,1,4,2,3,3,7]`.
 
@@ -1199,7 +1195,7 @@ def length_of_LIS(nums):
 
 This leads to a pretty optimal solution with time complexity \\(O(n^2)\\) and space complexity \\(O(n)\\).
 
-### 2D Dynamic Programs
+## 2D Dynamic Programs
 
 A important mistake not to make when initializing a 2D dynamic program in Python is say we want a `m x n` grid. This is correct:
 
@@ -1233,13 +1229,13 @@ False
 True
 ```
 
-### Sliding Window
+## Sliding Window
 
 The general idea is that we are given an array or a string and we want to find some sub-range that meets some criteria e.g. max sum, longest substring with specific chars, number of distinct elements, etc...
 
 Instead of calculating the criteria for each sub-range which would take \\(O(n^2)\\) time (with \\(n\\) the length of our array/string), we slide a window across our input and update our answer incrementally. The window has left/right pointers and gets expanded or shrunk depending on whether the sub-range under consideration violates some constraint. A running variable is often used to track max, longest etc...
 
-#### Longest Substring Without Repeating Characters
+### Longest Substring Without Repeating Characters
 
 The problem is: Given a string `s`, find the length of the longest substring without duplicate characters.
 
@@ -1308,7 +1304,7 @@ def longest_substring(s):
     return res
 ```
 
-### Binary Search
+## Binary Search
 
 Given a array of integers `nums` sorted in increasing order (e.g. `[-1, 0, 2, 3]`) and a target integer `target` we do binary search to find the index of the target as follows:
 
@@ -1329,7 +1325,7 @@ def binary_search(nums, target):
 
 Time complexity is \\(O(\log n)\\) as we halve the size of the array under consideration on each iteration of the while loop.
 
-#### Rotated Arrays
+### Rotated Arrays
 
 Problems where we want to find some value in an increasing array that has been sorted involves a binary search variant where the trick is understanding how to determine if the midpoint is to the right or left of the pivot, or if it is the pivot. As the array is in increasing order, the pivot is also the smallest value. For example, given the array `[1, 2, 3, 4, 5]` the possible rotations are: `[1, 2, 3, 4, 5] -> [5, 1, 2, 3, 4] -> [4, 5, 1, 2, 3] -> [3, 4, 5, 1, 2] -> [2, 3, 4, 5, 1]`.
 
@@ -1406,7 +1402,7 @@ def find_min(nums):
             r = m - 1
 ```
 
-### Backtracking
+## Backtracking
 
 General backtracking algorithm is the following:
 
@@ -1446,7 +1442,7 @@ So in total we have \\(1 + b + b^2 + \dots + b^h\\). This is the sum of a geomet
 
 The space required during execution is made up of the call stack and the current state. The call stack has size \\(O(h)\\) as it is can be up to the size of the maximum recursion depth. The size of the state depends on the specifics of the problem, but it is also usually of size \\(O(h)\\). This gives the total space complexity of \\(O(h)\\).
 
-#### Finding all subsets
+### Finding all subsets
 
 Let's look at a specific example of backtracking. Given an array nums of unique integers, return all possible subsets of nums. For example if `nums = [1,2,3]` we would return `[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]`. For each element of nums we include it or don't include it in a subset. This leads to the following decision tree, and our algorithm is to perform a DFS traversal of the tree and add the value of each node to our result.
 
@@ -1486,7 +1482,7 @@ def subsets(nums):
     return res
 ```
 
-#### Palindrome Partitioning
+### Palindrome Partitioning
 
 Suppose you want to partition a string `s` into substrings where each substring is a palindrome. For examples, for `s = "aab"` we would output `[["a","a","b"],["aa","b"]]`. The approach is that at each start index of `s` we can take the first 1 char, or the first 2 chars, ... or the first `n-i` to be our partition. This is visualized below:
 
@@ -1527,7 +1523,7 @@ def partition(s):
     return res
 ```
 
-### Bucket Sort
+## Bucket Sort
 
 This algorithm is useful for problems where we want to get the \\(k\\) most frequent elements in a list.
 
@@ -1588,7 +1584,7 @@ The intuition is that the buckets contain the count as the key, and a list of el
 - Time complexity: \\(O(n)\\)
 - Space complexity: \\(O(n)\\)
 
-### Prefix sums
+## Prefix sums
 
 Given an integer array `nums`, return an array output where `output[i]` is the product of all the elements of `nums` except `nums[i]`. The idea is to build two arrays of prefix / suffix products as the constraint is usually that you cannot take the product of all elements in `nums` as it is not guaranteed to fit into a 32-bit int.
 
@@ -1656,14 +1652,14 @@ This would then have Time & Space Complexity:
 - Time complexity: \\(O(n)\\)
 - Space complexity: \\(O(1)\\) (as typically input / output are not counted in space complexity analysis, so we get to ignore the \\(O(n)\\) sized output array we use).
 
-### Graph traversal
+## Graph traversal
 
 All BFS and DFS implementations hav Time & Space Complexity:
 
 - Time complexity: \\(O(V + E)\\), we have to check all nodes and edges.
 - Space complexity: \\(O(V)\\), we have to track visited nodes.
 
-#### Breadth-First Search (BFS)
+### Breadth-First Search (BFS)
 
 This traversal explores explores all neighbors level by level in a graph. It uses a queue to track the next nodes to visit and is commonly used to find the closest vertex to the start satisfying some conditions e.g. shortest path between two vertices. It implemented iteratively as follows:
 
@@ -1684,7 +1680,7 @@ def bfs(root):
                 queue.append(u)
 ```
 
-#### Depth-First Search (DFS)
+### Depth-First Search (DFS)
 
 DFS visits the child vertices before visiting the sibling vertices. It uses a stack to track the next nodes to visit and as such the iterative implementation is the exact same as for BFS but with a stack instead of a queue. As `deque` can also be used as a stack, we only have to change a single line `v = queue.popleft()` to `v = queue.pop()`, however it is common to use a list instead:
 
@@ -1719,7 +1715,7 @@ def dfs_recursive(root):
 
 The visited set can also be stored globally.
 
-#### Get neighbours in grid with obstacles
+### Get neighbours in grid with obstacles
 
 To get the neighbours of a node at index `i, j` in an `m x n` grid where we have obstacles e.g. water, wall, ... when the grid is a specific value e.g. `-1` in the below example:
 
@@ -1734,7 +1730,7 @@ def get_valid_neighbours(grid, i, j):
 
 Note: `yield` means the function returns a generator. This is more memory-efficient as we don't need to store all the neighbours in memory and allows lazy evaluation.
 
-#### Multi-Source Breadth-First Search
+### Multi-Source Breadth-First Search
 
 This algorithm is useful for problems where you have multiple sources and you want to know the shortest distance from each node to a source. Consider the example of a `m x n` grid where `0` is a source and `1` is a a cell and we want to update all `1`s with their distance to the nearest `0` in place:
 
@@ -1773,7 +1769,7 @@ def multi_source_bfs(grid):
 
 The time & space complexity is the same as for vanilla BFS.
 
-#### Finding a cycle in a graph
+### Finding a cycle in a graph
 
 The idea is to use DFS to find a cycle, the algorithm differs depending if the graph is directed or undirected. Assume we have the `n` nodes `0, 1, ..., n-1`, and edges is an adjacency list i.e. `edges[v]` are all the neigbours of node `v`.
 
@@ -1837,7 +1833,7 @@ if has_cycle(0, -1):
 return True
 ```
 
-#### Topological Sort with DFS
+### Topological Sort with DFS
 
 Consider the above case of a directed graph where I want print a topological ordering of the nodes in my graph. Consider the graph:
 
