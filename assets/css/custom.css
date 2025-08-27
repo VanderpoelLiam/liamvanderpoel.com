@@ -7,4 +7,9 @@
 .dark .chroma .ow {
   --tw-text-opacity: 1;
   color: rgba(var(--color-primary-300), var(--tw-text-opacity));
+}
+
+/* Limit table of contents width to 300px */
+.toc {
+  max-width: 300px;
 } 
