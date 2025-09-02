@@ -182,7 +182,7 @@ This is a common sub-problem for linked list related problems.
 
 ### Fast and Slow Pointers (Floyd's Cycle Detection)
 
-This algorithm is used for linked list related problems to find a cycle. You have two pointers `fast` and `slow`, we increment `slow` by one step each iteration and `fast` by two steps each iteration. The intuition is that the fast pointer will always catch the slow pointer if a cycle exists. This follows from imagining the slow/fast pointers as two runners on a track running in circles. Intuitively the fast runner will always catch the slow one (given they are running in a loop). But why will this take \\(O(n)\\) time? Let `d` be the size of the gap between the fast and slow pointers. Each iteration, the new gap becomes `d + 1 - 2 = d - 1` as the slow pointer increases the gap by one, and the fast pointer decreases it by 1. This means they will be equal in `d` iterations, and as the longest cycle has length \\(O(n)\\), they will be equal in \\(O(n)\\) time. The algorithm then follows:
+This algorithm is used for linked list related problems to find a cycle. You have two pointers `fast` and `slow`, we increment `slow` by one step each iteration and `fast` by two steps each iteration. The intuition is that the fast pointer will always catch the slow pointer if a cycle exists. This follows from imagining the slow/fast pointers as two runners on a track running in circles. Intuitively the fast runner will always catch the slow one (given they are running in a loop). But why will this take \\(O(n)\\) time? Let `d` be the size of the gap between the fast and slow pointers. Each iteration, the new gap becomes `d + 1 - 2 = d - 1` as the slow pointer increases the gap by 1, and the fast pointer decreases it by 2. This means they will be equal in `d` iterations, and as the longest cycle has length \\(O(n)\\), they will be equal in \\(O(n)\\) time. The algorithm then follows:
 
 ```python
 def cycle_exists(head):
@@ -486,7 +486,7 @@ Consider the following graph:
 0 -- 1 -- 2   3 -- 4  5
 ```
 
-Lets say we want to be able to efficiently find the connected component for each node, and to add edges to our graph and update this information about connected nodes. The idea is that a connected component in a graph can be represented as the dfs traversal tree of that component. Then we can represent elements being in the same connected component as having the same root in the dfs traversal. E.g. for the above graph we could represent the connected components with the root array:
+Lets say we want to be able to efficiently find the connected component for each node, add edges to our graph and update our connected components. The idea is to represent a connected component in a graph as the dfs traversal tree of that component. Then we can represent elements being in the same connected component as having the same root in the dfs traversal. E.g. for the above graph we could represent the connected components with the root array:
 
 ```python
 root = [0, 0, 0, 3, 3, 5]
@@ -1104,7 +1104,7 @@ def length_of_LIS(nums):
     return dfs(0, []) 
 ```
 
-As there are \\(2^n\\) paths, and we compute the length of the subsequence at the end of each path this has runtime \\(O(n\cdot 2^n)\\). We can be slightly more efficient with runtime (O(2^n)\\) if we update the length of the subsequence as we go, but this does not nicely lead to a DP solution:
+As there are \\(2^n\\) paths, and we compute the length of the subsequence at the end of each path this has runtime \\(O(n\cdot 2^n)\\). We can be slightly more efficient with runtime \\(O(2^n)\\) if we update the length of the subsequence as we go, but this does not nicely lead to a DP solution:
 
 ```python
 def length_of_LIS(nums):
@@ -1314,7 +1314,7 @@ def binary_search(nums, target):
     l, r = 0, n-1
     while l <= r:
         m = (r+l) // 2
-        if nums[m] > target: # 
+        if nums[m] > target: 
             r = m - 1
         elif nums[m] < target:
             l = m + 1
