@@ -3,19 +3,6 @@ title: "How much memory do you need to work with LLMs?"
 date: 2025-09-25T09:55:27+02:00
 draft: false
 ---
-<!-- Intro: Basics of what 1B param model means
-
-Training from scratch (how probably dont want to do this)
-
-Fine-tuning (quantization, llora, unsloth, etc…)
-
-Quantization
-
-Inference
-
-How to ballpark numbers -->
-
-<!-- [Optimizing LLMs for Speed and Memory](https://huggingface.co/docs/transformers/v4.35.0/en/llm_tutorial_optimization) -->
 
 {{< katex >}}
 
@@ -36,5 +23,29 @@ Dynamic range on the other hand is how small or large of a number we can represe
 ![Visualization of float32 compared to float16 bit layouts](float32-to-float16.jpeg)*float32 to float16 conversion. Visualisation from [Float32 vs Float16 vs BFloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16).*
 
 The number of bits we have to represent the float is limited so we need to make tradeoff between how many bits we use in memory vs the dynamic range and precision. The motivation behind bfloat16 for LLMs is that is prevents overflow errors converting from 32-bit to 16-bit representations as the dynamic range is the same, and it only costs a little bit of precision relative to a float16.
+
+### Estimating GPU memory requirements
+
+Therefore, it follows that VRAM (GPU memory) requirement to load a `X` billion parameter model is `(num bytes per parameter) * X * 10^9` bytes or `(num bytes per parameter) * X` GB. So the ballpark memory requirements for a `X` billion parameter model are:
+
+<div align="center">
+
+| Precision           | VRAM (GB)  |
+|---------------------|------------|
+| float32             | 4 * `X`      |
+| bfloat16 / float16  | 2 * `X`      |
+
+</div>
+
+## Training vs fine-tuning vs inference
+
+TODO: Explain how training requires more memory as we are not just storing weights, we need to store gradients and optimizer.
+[Optimizing LLMs for Speed and Memory](https://huggingface.co/docs/transformers/v4.56.2/llm_tutorial_optimization)
+
+
+## Optimizations
+
+TODO: Here can explain quantization, fine-tuning, llora, unsloth 
+
 
 {{< reflist exclude="wikipedia">}}
