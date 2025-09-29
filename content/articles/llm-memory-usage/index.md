@@ -86,7 +86,21 @@ It is more difficult to give an exact memory usage for the activation memory, so
 
 ### Fine-tuning
 
-TODO: Why is this so much faster? Explain how don;t have the factor 16 overhead.
+If we are trying to adapt an LLM to a downstream task, we might want to perform additional training on a dataset of examples of our specific task. This is fine-tuning. However it is quite computationally expensive to update all the model parameters and in general PEFT (Parameter-Efficient Fine-Tuning) is done instead where we only update a small subset of parameters.
+
+The most popular and effective method at the moment is [LoRa](https://arxiv.org/pdf/2106.09685) and [QLoRa](https://arxiv.org/pdf/2305.14314).
+
+![LoRa](lora.png)**Diagram from [Hugging Face LoRA Overview](https://huggingface.co/docs/peft/main/en/conceptual_guides/lora)**
+
+LoRA stand for Low-Rank Adaptation. The idea is to freeze the original weight matrix \\(W\\) and only update two smaller low-rank matrices \\(A\\) and \\(B\\). Depending on the implementation, there are a few hyper-parameters to choose, the two most influential being the rank \\(r\\) of these matrices and the target modules (i.e. target weight matrices to apply the LoRa updates such as attention or MLP layers). The higher rank we pick and the more layers we target directly results in a larger memory requirement, however this additional memory is on the order of `1/%` of the model training parameters. QLoRa allows additional memory savings by a factor of 4 by quantizing the model weights to 4-bits and using 4-bit adapters.
+
+For example this [Llama-3-8b fine-tuning tutorial with unsloth](https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/tutorial-how-to-finetune-llama-3-and-use-in-ollama) has `41,943,040` additional parameters (~0.42B), that is `0.524/%` additional memory, and in total requires 70\% less VRAM to fine-tune compared to a training.
+
+### Effective Batch Size
+
+- Explain what efffecitve batch size from [Unsloth LoRA Hyperparameters Guide](https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide). 
+
+- Explain how batch size mainly increases activation size 
 
 ### Inference
 
