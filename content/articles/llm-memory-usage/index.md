@@ -92,19 +92,23 @@ The most popular and effective method at the moment is [LoRa](https://arxiv.org/
 
 ![LoRa](lora.png)**Diagram from [Hugging Face LoRA Overview](https://huggingface.co/docs/peft/main/en/conceptual_guides/lora)**
 
-LoRA stand for Low-Rank Adaptation. The idea is to freeze the original weight matrix \\(W\\) and only update two smaller low-rank matrices \\(A\\) and \\(B\\). Depending on the implementation, there are a few hyper-parameters to choose, the two most influential being the rank \\(r\\) of these matrices and the target modules (i.e. target weight matrices to apply the LoRa updates such as attention or MLP layers). The higher rank we pick and the more layers we target directly results in a larger memory requirement, however this additional memory is on the order of `1/%` of the model training parameters. QLoRa allows additional memory savings by a factor of 4 by quantizing the model weights to 4-bits and using 4-bit adapters.
+LoRA stand for Low-Rank Adaptation. The idea is to freeze the original weight matrix \\(W\\) and only update two smaller low-rank matrices \\(A\\) and \\(B\\). Depending on the implementation, there are a few hyper-parameters to choose, the two most influential being the rank \\(r\\) of these matrices and the target modules (i.e. target weight matrices to apply the LoRa updates such as attention or MLP layers). The higher rank we pick and the more layers we target directly results in a larger memory requirement, however this additional memory is on the order of `1/%` of the model training parameters. QLoRa allows additional memory savings by a factor of 4 by quantizing the model weights to 4-bits and using 4-bit adapters. [Unsloth LoRA Hyperparameters Guide](https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide) provides additional details.
 
 For example this [Llama-3-8b fine-tuning tutorial with unsloth](https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/tutorial-how-to-finetune-llama-3-and-use-in-ollama) has `41,943,040` additional parameters (~0.42B), that is `0.524/%` additional memory, and in total requires 70\% less VRAM to fine-tune compared to a training.
 
 ### Effective Batch Size
 
-- Explain what efffecitve batch size from [Unsloth LoRA Hyperparameters Guide](https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide). 
+The last factor that influences the memory requirements during training and fine-tuning is the effective batch size: [`effective_batch_size = batchsize * gradient_accumulation_steps`](https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide#effective-batch-size).
 
-- Explain how batch size mainly increases activation size 
+- `batch_size` is how many training examples we process in parallel per forward pass. The the activations, gradients and optimizer states increase linearly with the batch size as we must store all this information before our gradient update step.
+
+- `gradient_accumulation_steps` is how many batches to process before updating the gradients. It allows us to simulate larger batch sizes, hence using less VRAM at the cost of increase training time.
+
+These parameters are set by experimentation to get a effective batch size in the 4 to 16 range without running out of memory.
 
 ### Inference
 
 [KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching)
 
 
-{{< reflist exclude="wikipedia">}}
+{{< reflist exclude="wikipedia,https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide#effective-batch-size">}}
