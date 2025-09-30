@@ -1,30 +1,52 @@
 ---
-title: "How much memory do you need to work with LLMs?"
+title: "How much GPU memory does my LLM need?"
 date: 2025-09-25T09:55:27+02:00
 draft: false
 ---
 
 {{< katex >}}
 
-## What does a 1B parameter model mean?
+## How large is a large language model?
 
-Usually when discussing LLMs people say it is a X billion parameter model. For example the prototypical LLM [GPT-3](https://arxiv.org/pdf/2005.14165) was a 175 billion parameter model. An LLM is (a transformer based) neural network, and so parameters are the weights of this network. Each weight is a floating point numbers stored as a [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), [float16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format) or [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) (often abbreviated to fp32, fp16, bf16). So a 1B parameter LLM is a neural network of 1B floating point weights.
+When comparing large language models, people talk in terms of billions of parameters. For example the prototypical LLM [GPT-3](https://arxiv.org/pdf/2005.14165) is a 175 billion parameter model. What this means is that GPT3 is a transformer based neural network with 175 billion parameters (also called weights) in its network. Each weight is a floating point number so to store in memory say a 1B parameter LLM requires storing 1B floats.
 
 ### Floating point numbers
 
-A quick aside on floating point numbers is necessary. Consider the real number \\(\pi=3.14159265...\\). As \\(\pi\\) has infinite digits we can only store a finite number of them in memory, this is the precision of the floating point number. For a [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) we would store \\(\pi=3.14159274101257324\\) where `3.14159274101257324 = -1^0 x 2^1 x (1 + 0.5707963705062866)` would be represented in memory as 32 bits in the form `0 10000000 10010010000111111011011` (spaces added for readability, but it would just be a single 32-bit integer). In general a decimal `(-1)^Sign x 2^(Exponent-127) x (1 + 0.Mantissa)` would be stored as a float32 in memory as the integer `Sign Exponent Mantissa` (see [Floating Point Numbers](https://www.doc.ic.ac.uk/~eedwards/compsys/float/) for more details).
+Okay, so how big is a float? To answer this requires a quick aside on floating point numbers. Consider the real number \\(\pi=3.14159265...\\) As \\(\pi\\) has infinite digits we can only store a finite number of them in memory, so for a [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) we would store \\(\pi=3.1415927\\). We would represent this number in memory using 32-bits (i.e. the 32 in float32) as `0 10000000 10010010000111111011011` (spaces added for readability). Each section is respectively the sign, exponent and mantissa, where an arbitrary decimal is first decomposed into the product `(-1)^Sign x 2^(Exponent-127) x (1.Mantissa)` then stored as `Sign Exponent Mantissa` in memory. For example `3.1415927 = -1^0 x 2^(128-127) x (1.5707964)` so we store it as `0 128 4788187`[^decimal-mantissa-conversion] which in binary is `0 10000000 10010010000111111011011`.
 
-The number of bits assigned to the exponent and mantissa is what differentiates fp32, fp16 and bf16. They each make tradeoffs between dynamic range and precision. Precision as we have already mentioned is how many significant digits we store in memory e.g. float32 has more precision than bfloat16 as the 23 bit mantissa of the float32 allows for more significant digits than the 10 bit mantissa of the bfloat16:
+[^decimal-mantissa-conversion]: You might be a bit confused how `1.5707964` became `4788187`. For a decimal value `d` of the form `1.xxxx` and a mantissa of `N` bits we store the integer `M` in memory where: $$M = (d - 1) * 2^N$$ rounding as necessary to the nearest integer. You can then verify that $$4788187 = (1.5707963705062866 - 1) * 2^{23}$$ See [Floating Point Numbers](https://www.doc.ic.ac.uk/~eedwards/compsys/float/) for more details.
 
-![Visualization of float32 compared to bfloat16 bit layouts](float32-to-bfloat16.jpeg)*[The same decimal represented as a float32 and as a bfloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
+The floats most often used for language modelling are [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), [float16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format) or [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) (often abbreviated to fp32, fp16, bf16). The total number of bits used and how these bits are assigned to the exponent and mantissa is what differentiates all three of these formats. They each make tradeoffs between dynamic range and precision. Precision is how many significant digits we store in memory and is determined by the mantissa. Dynamic range on the other hand is how small or large of a number we can represent and depends solely on the exponent. Consider the following float32:
 
-Dynamic range on the other hand is how small or large of a number we can represent, this depends solely on the exponent. As the above figure shows, a bfloat16 has the same dynamic range as a float32 but takes up only 16 bits in memory vs 32 bits at the expense of lower precision. On the other hand, a float16 can represent a smaller dynamic range than a bfloat16 but it has a higher precision:
+![Example float32](float32.png)*Figure from [Float32 vs Float16 vs BFloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
 
-![Visualization of float32 compared to float16 bit layouts](float32-to-float16.jpeg)*[The same decimal represented as a float32 and as a float16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
+The sign, exponent and mantissa correspond to `1`, `81` and `3181830` respectively in base 10. Converting to a decimal gives:[^mantissa-decimal-conversion]
 
-As the names suggest a float32 uses 32-bits in memory, compared to 16 for a float16 or bfloat16. Each data type makes different tradeoff between memory usage, dynamic range and precision. bf16 is very commonly used for LLMs as it prevents overflow errors converting from 32-bit to 16-bit representations as the dynamic range is the same, and it only costs a little bit of precision relative to a fp16.
+[^mantissa-decimal-conversion]: Rearranging the formula from the above footnote gives $$d = 1 + M * 2^{-N}$$
 
-### Estimating GPU memory requirements
+$$ -1^1 * 2^{81-127} * (1 + 3181830*2^{-23}) = -1.9601084 \cdot 10^{-14}$$
+
+It's worth pointing out that multiple decimals will map to the same float which is why it makes sense to only report floats to a limited number of significant figures[^float-significant-figures].
+
+[^float-significant-figures]: For a mantissa of `N` bits, increasing least significant bit by one will increase our float by \\(2^{-N}\\). For a float32 this is \\(2^{-23} \approx 1.19 \cdot 10^{-7}\\). This is why floats have rounding errors as we can only distinguish between decimals with difference greater than \\(2^{-N}\\). This is also why it only makes sense to report floats to a limited number of significant figures given by \\(\lfloor \log_{10}{2^{N}} \rfloor = \lfloor N \cdot \log_{10}{2} \rfloor \approx \lfloor N / 3 \rfloor\\). Again for a float32, we should only report \\(\lfloor N / 3 \rfloor = 7\\) significant figures.
+
+Now to convert from a fp32 to a bf16 we simply truncate the mantissa:
+
+![Float32 to BFloat16 conversion](float32-to-bfloat16.png)*Float32 to BFloat16 conversion figure from [Float32 vs Float16 vs BFloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
+
+For our bfloat16, the mantissa takes up `7` bits and stores the value `48`. Converting to decimal gives:
+
+$$ -1^1 * 2^{81-127} * (1 + 48*2^{-7}) = -1.95 \cdot 10^{-14}$$
+
+We have lost some precision as the smallest difference between bf16 floats is \\(2^{-7} \approx 1 \cdot 10^{-2}\\) compared to \\(2^{-23} \approx 1 \cdot 10^{-7}\\) for fp32, but we are still able to represent the same dynamic range of numbers. If we were instead to try and convert to a float16 we would need to truncate both the exponent and the mantissa:
+
+![Float32 to Float16 conversion](float32-to-float16.png)*Float32 to Float16 conversion with underflow figure from [Float32 vs Float16 vs BFloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
+
+This leads to an issue as we want to fit the exponent with value `81` using 5 bits of memory. This is not possible as 5 bits can only store integers until `63` hence we get an underflow as the dynamic range of a float16 is not large enough to accommodate numbers closer to zero than \\(2^{-5} \approx 1 \cdot 10^{-3}\\).
+
+While this might seem like a tangent, LLMs are just a big bag of floats. Many of the tricks we will cover on how to reduce the memory usage of LLMs involve tradeoffs between the different ways we can represent the models weights in memory during training and inference.
+
+## Estimating GPU memory requirements
 
 Therefore, it follows that VRAM (GPU memory) requirement to load a `X` billion parameter model is `(bytes per parameter) * X * 10^9` bytes or `(bytes per parameter) * X` GB. So the ballpark memory requirements per billion parameters are:
 
@@ -106,9 +128,12 @@ The last factor that influences the memory requirements during training and fine
 
 These parameters are set by experimentation to get a effective batch size in the 4 to 16 range without running out of memory.
 
+### Sequence Length
+
+TODO: add this section
+
 ### Inference
 
 [KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching)
-
 
 {{< reflist exclude="wikipedia,https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide#effective-batch-size">}}
