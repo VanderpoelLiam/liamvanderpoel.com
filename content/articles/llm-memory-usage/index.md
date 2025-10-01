@@ -8,11 +8,11 @@ draft: false
 
 ## How large is a large language model?
 
-When comparing large language models, people talk in terms of billions of parameters. For example the prototypical LLM [GPT-3](https://arxiv.org/pdf/2005.14165) is a 175 billion parameter model. What this means is that GPT3 is a transformer based neural network with 175 billion parameters (also called weights) in its network. Each weight is a floating point number so to store in memory say a 1B parameter LLM requires storing 1B floats.
+When comparing large language models, people talk in terms of billions of parameters. For example the prototypical LLM [GPT-3](https://arxiv.org/pdf/2005.14165) is a 175 billion parameter model. What this means is that GPT3 is a transformer based neural network with 175 billion parameters (also called weights) in its network. Each weight is a floating point number, so to store the model in memory means to store lots and lots of floats.
 
 ### Floating point numbers
 
-Okay, so how big is a float? To answer this requires a quick aside on floating point numbers. Consider the real number \\(\pi=3.14159265...\\) As \\(\pi\\) has infinite digits we can only store a finite number of them in memory, so for a [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) we would store \\(\pi=3.1415927\\). We would represent this number in memory using 32-bits (i.e. the 32 in float32) as `0 10000000 10010010000111111011011` (spaces added for readability). Each section is respectively the sign, exponent and mantissa, where an arbitrary decimal is first decomposed into the product `(-1)^Sign x 2^(Exponent-127) x (1.Mantissa)` then stored as `Sign Exponent Mantissa` in memory. For example `3.1415927 = -1^0 x 2^(128-127) x (1.5707964)` so we store it as `0 128 4788187`[^decimal-mantissa-conversion] which in binary is `0 10000000 10010010000111111011011`.
+Okay, so how big is a float? To answer this requires a quick aside on floating point numbers. Consider the real number \\(\pi=3.14159265...\\) As \\(\pi\\) has infinite digits we can only store a finite number of them in memory, so for a [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format) we would store \\(\pi=3.1415927\\). More precisely, we would store this number in memory using 32-bits  as `0 10000000 10010010000111111011011` (spaces added for readability). Each section is respectively the sign, exponent and mantissa. To represent an arbitrary decimal, it is first decomposed into the product `(-1)^Sign x 2^(Exponent-127) x (1.Mantissa)` then stored as three integers `Sign Exponent Mantissa` For example `3.1415927 = -1^0 x 2^(128-127) x (1.5707964)` so we store it as `0 128 4788187`[^decimal-mantissa-conversion] which in binary is `0 10000000 10010010000111111011011`.
 
 [^decimal-mantissa-conversion]: You might be a bit confused how `1.5707964` became `4788187`. For a decimal value `d` of the form `1.xxxx` and a mantissa of `N` bits we store the integer `M` in memory where: $$M = (d - 1) * 2^N$$ rounding as necessary to the nearest integer. You can then verify that $$4788187 = (1.5707963705062866 - 1) * 2^{23}$$ See [Floating Point Numbers](https://www.doc.ic.ac.uk/~eedwards/compsys/float/) for more details.
 
@@ -28,7 +28,7 @@ $$ -1^1 * 2^{81-127} * (1 + 3181830*2^{-23}) = -1.9601084 \cdot 10^{-14}$$
 
 It's worth pointing out that multiple decimals will map to the same float which is why it makes sense to only report floats to a limited number of significant figures[^float-significant-figures].
 
-[^float-significant-figures]: For a mantissa of `N` bits, increasing least significant bit by one will increase our float by \\(2^{-N}\\). For a float32 this is \\(2^{-23} \approx 1.19 \cdot 10^{-7}\\). This is why floats have rounding errors as we can only distinguish between decimals with difference greater than \\(2^{-N}\\). This is also why it only makes sense to report floats to a limited number of significant figures given by \\(\lfloor \log_{10}{2^{N}} \rfloor = \lfloor N \cdot \log_{10}{2} \rfloor \approx \lfloor N / 3 \rfloor\\). Again for a float32, we should only report \\(\lfloor N / 3 \rfloor = 7\\) significant figures.
+[^float-significant-figures]: For a mantissa of `N` bits, increasing least significant bit by one will increase our float by \\(2^{-N}\\). For a float32 this is \\(2^{-23} \approx 1.19 \cdot 10^{-7}\\). This is why multiple decimals map to the same float, as the float representation can only distinguish between decimals with difference greater than \\(2^{-N}\\). This is also why it only makes sense to report floats to a limited number of significant figures given by \\(\lfloor \log_{10}{2^{N}} \rfloor = \lfloor N \cdot \log_{10}{2} \rfloor \approx \lfloor N / 3 \rfloor\\). So for a float32, we should only report \\(\lfloor N / 3 \rfloor = 7\\) significant figures.
 
 Now to convert from a fp32 to a bf16 we simply truncate the mantissa:
 
@@ -42,11 +42,13 @@ We have lost some precision as the smallest difference between bf16 floats is \\
 
 ![Float32 to Float16 conversion](float32-to-float16.png)*Float32 to Float16 conversion with underflow figure from [Float32 vs Float16 vs BFloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
 
-This leads to an issue as we want to fit the exponent with value `81` using 5 bits of memory. This is not possible as 5 bits can only store integers until `63` hence we get an underflow as the dynamic range of a float16 is not large enough to accommodate numbers closer to zero than \\(2^{-5} \approx 1 \cdot 10^{-3}\\).
+This leads to an issue as we want to fit the exponent with value `81` using 5 bits of memory. This is not possible as 5 bits can only store integers until `63` so we get an underflow error as the dynamic range of a float16 is not large enough to accommodate numbers closer to zero than \\(2^{-5} \approx 1 \cdot 10^{-3}\\).
 
-While this might seem like a tangent, LLMs are just a big bag of floats. Many of the tricks we will cover on how to reduce the memory usage of LLMs involve tradeoffs between the different ways we can represent the models weights in memory during training and inference.
+While this might seem like a tangent, **LLMs are just a big bag of floats**. To understand how much memory is needed during training, fine-tuning and inference requires an understanding the tradeoffs between the different ways we can represent these floats in memory.
 
 ## Estimating GPU memory requirements
+
+START HERE: At this point we understand that LLMs are big bags of floats and so loading the model onto the GPU depends on what format the weights are stored in.
 
 Therefore, it follows that VRAM (GPU memory) requirement to load a `X` billion parameter model is `(bytes per parameter) * X * 10^9` bytes or `(bytes per parameter) * X` GB. So the ballpark memory requirements per billion parameters are:
 
