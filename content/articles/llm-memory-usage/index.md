@@ -44,22 +44,60 @@ We have lost some precision as the smallest difference between bf16 floats is \\
 
 This leads to an issue as we want to fit the exponent with value `81` using 5 bits of memory. This is not possible as 5 bits can only store integers until `63` so we get an underflow error as the dynamic range of a float16 is not large enough to accommodate numbers closer to zero than \\(2^{-5} \approx 1 \cdot 10^{-3}\\).
 
-While this might seem like a tangent, **LLMs are just a big bag of floats**. To understand how much memory is needed during training, fine-tuning and inference requires an understanding the tradeoffs between the different ways we can represent these floats in memory.
+While this might seem like a tangent, **LLMs are just a big bag of floats**. To understand how much memory is needed during training, fine-tuning and inference requires us to first understand floats.
 
 ## Estimating GPU memory requirements
 
-START HERE: At this point we understand that LLMs are big bags of floats and so loading the model onto the GPU depends on what format the weights are stored in.
+To summarize so far: **LLMs are just a big bag of floats**. To load a 1B parameter LLM into memory means loading 1B floats. If our weights are represented in half-precision with bf16 or fp16, each would require 16-bits or 2 bytes of memory. Double that if they are represented in a full-precision format like fp32. It then follows that the VRAM (GPU memory) requirement to load a `X` billion parameter model into memory is `(bytes per parameter) * X * 10^9` bytes or `(bytes per parameter) * X` gigabytes (GB). As most LLMs are stored in half-precision, loading a LLM into memory requires approximately 2GB of VRAM per billion parameters.
 
-Therefore, it follows that VRAM (GPU memory) requirement to load a `X` billion parameter model is `(bytes per parameter) * X * 10^9` bytes or `(bytes per parameter) * X` GB. So the ballpark memory requirements per billion parameters are:
+However we don't just load an model into memory and then do nothing. Either we are generating text by performing inference, or we are updating the model weights by training. Each mode has vastly different memory requirements as we will see below.
 
-{{< center-table >}}
+### Inference
 
-| Precision           | VRAM (GB per billion params) |
-|---------------------|------------------------------|
-| float32             | 4            |
-| bfloat16 / float16  | 2            |
+Inference is when the model generates text given some input (called a prompt). LLMs can only generate a fixed amount of text. The limit, known as the context window, is set during training and is a limit on the combined number of input and output tokens. For example, [GPT-3](https://arxiv.org/pdf/2005.14165) has a context window of 2048, so the prompt and the output combined can never exceed 2048 tokens. In its simplest form, inference is when the LLM generates the next token by performing a forward pass over all previously generated tokens. Imagine I provide the model with the prompt `<bos> Hi`, you could imagine the following output at each step:
 
-{{< /center-table >}}
+{{< center-table>}}
+
+|Step|Input Tokens|Output Token|
+|----|------------|-----------|
+|1|`<bos> Hi`|`I`|
+|2|`<bos> Hi I`|`am`|
+|3|`<bos> Hi I am`|`Hari`|
+|4|`<bos> Hi I am Hari`|`Seldon!`|
+|5|`<bos> Hi I am Hari Seldon!`|`<eos>`|
+
+{{< /center-table>}}
+
+At each step, the inputs only differ by the last token. Therefore we are computing the same activations (intermediate results of the forward pass) again and again. This inefficiency is particularly bad for the attention layer. 
+
+So the forward pass repeats the same operations until it reaches the final token, leading to lots of repeated work, especially for the attention layer (refer to [Attention Mechanism](https://huggingface.co/blog/not-lain/tensor-dims)). To avoid this issue, a KV-cache is used to cache intermediate results, see [KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching). This speeds up inference at the expense of memory, as we need to store a cache that grows linearly with the number of generated tokens.
+
+
+
+<!-- by passing all previously generated tokens to the model. 
+
+
+In its most basic form, during inference the model generates the current token by looking at all previous tokens. "Looking at" more precisely means calculating the attention weights of the previous tokens . So if we consider the following generation:
+
+
+
+each row corresponds to the model generating the next token. At each step it computes the attention weights over all input tokens, and so we repeat the same calculations over and over. To speed up decoding, a KV-cache is used to cache intermediate results for previously seen tokens. 
+
+[FlashAttention](https://huggingface.co/papers/2205.14135) is another optimization that avoids memory scaling quadratically with sequence length when computing activations. Activations are the intermediate results computed when doing a forward pass, for example the attention weights mentioned above. It also significantly speeds up inference as well as training. 
+
+START HERE: Quantization -->
+
+TODO: Explain how inference is generating text starting from an input sequence (prompt). Next how this introduces a dependency on the sequence length. Next how flash attention and kv-cache optimize memory usage and speed. Next how can use quantization to further reduce memory requirement. Lastly, what does this mean in total for inference memory requirements.
+
+### Training
+
+TODO: Explain how training is much much more costly than inference. How we focus on SFT which is how train base language model, but RLHF is another important step, but one we ignore today. How need to store model states and activation memory, what each of them is and how much they contribute. Explain two major optimizations used during training: mixed-precision training and activation checkpointing. Explain how tradeoffs they incur wrt training time, memory usage and performance. Explain how batch size plays a role, and trick with gradient accumulation to simulate larger batch size. Lastly, what does this mean in total for training memory requirements.
+
+### Fine-tuning
+
+TODO: Explain how fine-tuning can mean additional training or usually now PEFT. How does llora and qlora work and why require so much less memory. Lastly, what does this mean in total for fine-tuning memory requirements.
+
+<!-- 
 
 ### Quantization
 
@@ -82,7 +120,6 @@ Training the model means updating the model weights based on the training data. 
 
 If you look up a model on hugging face, you often see the label `Tensor type | BF16`. This indicates that the model weights are stored as bf16 floats, however during training it is common to keep an additional copy of the weights in fp32 to improve performance. This is known as [Mixed Precision Training](https://arxiv.org/pdf/1710.03740). The effect is that we require 6 bytes per parameter during training (2 bytes for bf16/fp16 and 4 bytes for fp32).
 
-<!-- ![Mixed precision training iteration for a layer](mixed-prec-iteration.png)*Mixed precision training iteration for a layer.* -->
 
 We always need to track gradients during training so that is another 2 bytes per parameter if they are stored in half-precision (4 for fp32). [AdamW](https://docs.pytorch.org/docs/stable/generated/torch.optim.AdamW.html) is probably the most popular optimization algorithm for transformers. Adam requires tracking the momentum and variance of the gradients to perform an update step:
 
@@ -104,7 +141,7 @@ $$\text{transformer layers} \times \text{hidden dimensions} \times \text{sequenc
 
 However this is often combined with [Activation checkpointing (or gradient checkpointing)](https://arxiv.org/pdf/1604.06174) which reduces the memory requirement to the square root of the activation memory. It does this by recomputing activations during the backward pass rather than storing them in memory. [FlashAttention](https://huggingface.co/papers/2205.14135) is another optimization that avoids memory scaling quadratically with sequence length when computing activations.
 
-See [Efficient Deep Learning: A Comprehensive Overview of Optimization Techniques](https://huggingface.co/blog/Isayoften/optimization-rush), [Optimizing LLMs for Speed and Memory](https://huggingface.co/docs/transformers/v4.56.2/llm_tutorial_optimizatio) and [Efficient Training on a Single GPU](https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one) for a more detailed overview of all the training optimizations.
+See [Efficient Deep Learning: A Comprehensive Overview of Optimization Techniques](https://huggingface.co/blog/Isayoften/optimization-rush), [Optimizing LLMs for Speed and Memory](https://huggingface.co/docs/transformers/v4.56.2/llm_tutorial_optimization) and [Efficient Training on a Single GPU](https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one) for a more detailed overview of all the training optimizations.
 
 It is more difficult to give an exact memory usage for the activation memory, so I would say in general **a good ballpark for training memory usage is 16 bytes per model parameter**.
 
@@ -136,6 +173,6 @@ TODO: add this section
 
 ### Inference
 
-[KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching)
+[KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching) -->
 
 {{< reflist exclude="wikipedia,https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide#effective-batch-size">}}
