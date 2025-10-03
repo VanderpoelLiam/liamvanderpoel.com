@@ -16,7 +16,7 @@ Okay, so how big is a float? To answer this requires a quick aside on floating p
 
 [^decimal-mantissa-conversion]: You might be a bit confused how `1.5707964` became `4788187`. For a decimal value `d` of the form `1.xxxx` and a mantissa of `N` bits we store the integer `M` in memory where: $$M = (d - 1) * 2^N$$ rounding as necessary to the nearest integer. You can then verify that $$4788187 = (1.5707963705062866 - 1) * 2^{23}$$ See [Floating Point Numbers](https://www.doc.ic.ac.uk/~eedwards/compsys/float/) for more details.
 
-The floats most often used for language modelling are [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), [float16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format) or [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) (often abbreviated to fp32, fp16, bf16). The total number of bits used and how these bits are assigned to the exponent and mantissa is what differentiates all three of these formats. They each make tradeoffs between dynamic range and precision. Precision is how many significant digits we store in memory and is determined by the mantissa. Dynamic range on the other hand is how small or large of a number we can represent and depends solely on the exponent. Consider the following float32:
+The float formats most often used for language modelling are [float32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format), [float16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format) or [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format) (often abbreviated to fp32, fp16, bf16). The total number of bits used and how these bits are assigned to the exponent and mantissa is what differentiates them. They each make tradeoffs between dynamic range and precision. Precision is how many significant digits we store in memory and is determined by the mantissa. Dynamic range is how small or large of a number we can represent and depends solely on the exponent. Consider the following float32:
 
 ![Example float32](float32.png)*Figure from [Float32 vs Float16 vs BFloat16](https://newsletter.theaiedge.io/p/float32-vs-float16-vs-bfloat16)*
 
@@ -44,11 +44,13 @@ We have lost some precision as the smallest difference between bf16 floats is \\
 
 This leads to an issue as we want to fit the exponent with value `81` using 5 bits of memory. This is not possible as 5 bits can only store integers until `63` so we get an underflow error as the dynamic range of a float16 is not large enough to accommodate numbers closer to zero than \\(2^{-5} \approx 1 \cdot 10^{-3}\\).
 
-While this might seem like a tangent, **LLMs are just a big bag of floats**. To understand how much memory is needed during training, fine-tuning and inference requires us to first understand floats.
+While this might seem like a tangent, **LLMs are just a big bag of floats**. To understand how much memory is needed during training, fine-tuning and inference requires first understanding floats.
 
 ## Estimating GPU memory requirements
 
-To summarize so far: **LLMs are just a big bag of floats**. To load a 1B parameter LLM into memory means loading 1B floats. If our weights are represented in half-precision with bf16 or fp16, each would require 16-bits or 2 bytes of memory. Double that if they are represented in a full-precision format like fp32. It then follows that the VRAM (GPU memory) requirement to load a `X` billion parameter model into memory is `(bytes per parameter) * X * 10^9` bytes or `(bytes per parameter) * X` gigabytes (GB). As most LLMs are stored in half-precision, loading a LLM into memory requires approximately 2GB of VRAM per billion parameters.
+To summarize so far: **LLMs are just a big bag of floats**.
+
+Loading a 1B parameter LLM into memory means loading 1B floats. If our weights are represented in half-precision with bf16 or fp16, each would require 16-bits or 2 bytes of memory. Double that if they are represented in a full-precision format like fp32. Therefore the VRAM (GPU memory) required to load a `X` billion parameter model into memory is `(bytes per parameter) * X * 10^9` bytes or `(bytes per parameter) * X` gigabytes (GB). As most LLMs are stored in half-precision, loading a LLM into memory requires approximately 2GB of VRAM per billion parameters.
 
 However we don't just load an model into memory and then do nothing. Either we are generating text by performing inference, or we are updating the model weights by training. Each mode has vastly different memory requirements as we will see below.
 
@@ -68,30 +70,17 @@ Inference is when the model generates text given some input (called a prompt). L
 
 {{< /center-table>}}
 
-At each step, the inputs only differ by the last token. Therefore we are computing the same activations (intermediate results of the forward pass) again and again. This inefficiency is particularly bad for the attention layer. 
+At each step, the inputs only differ by the last token. Therefore we are computing the same activations (intermediate results of the forward pass) again and again. This inefficiency is particularly bad due to the attention layer, and leads to a quadratic time complexity with respect to sequence length (length of the input tokens) for inference.
 
-So the forward pass repeats the same operations until it reaches the final token, leading to lots of repeated work, especially for the attention layer (refer to [Attention Mechanism](https://huggingface.co/blog/not-lain/tensor-dims)). To avoid this issue, a KV-cache is used to cache intermediate results, see [KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching). This speeds up inference at the expense of memory, as we need to store a cache that grows linearly with the number of generated tokens.
-
-
-
-<!-- by passing all previously generated tokens to the model. 
-
-
-In its most basic form, during inference the model generates the current token by looking at all previous tokens. "Looking at" more precisely means calculating the attention weights of the previous tokens . So if we consider the following generation:
-
-
-
-each row corresponds to the model generating the next token. At each step it computes the attention weights over all input tokens, and so we repeat the same calculations over and over. To speed up decoding, a KV-cache is used to cache intermediate results for previously seen tokens. 
-
-[FlashAttention](https://huggingface.co/papers/2205.14135) is another optimization that avoids memory scaling quadratically with sequence length when computing activations. Activations are the intermediate results computed when doing a forward pass, for example the attention weights mentioned above. It also significantly speeds up inference as well as training. 
-
-START HERE: Quantization -->
+To speed things up, we use a cache to store attention keys and values (refer to [Attention Mechanism](https://huggingface.co/blog/not-lain/tensor-dims) for more details). Known as [KV-Caching](https://huggingface.co/blog/not-lain/kv-caching), this leads to a linear time complexity with respect to sequence length at the expense of growing memory linearly. As the size of the cache depends on the structure of the attention layers, estimating the cache size in GB is model dependent. To complicate things further, libraries like [vLLM](https://docs.vllm.ai/en/latest/configuration/optimization.html) allow you to specify GPU memory utilization, and then it scales the KV-cache size up or down based on its allocation of VRAM. If you want to serve more than one user at once, then you need to batch the inputs, so doubling the batch size also doubles the KV-cache. If you know ahead of time what model you plan to use, then this [KV Cache Memory Calculator](https://bentoml.com/llm/inference-optimization/kv-cache-offloading#how-to-calculate-the-kv-cache-size) will spit out the memory consumption of the cache.
 
 TODO: Explain how inference is generating text starting from an input sequence (prompt). Next how this introduces a dependency on the sequence length. Next how flash attention and kv-cache optimize memory usage and speed. Next how can use quantization to further reduce memory requirement. Lastly, what does this mean in total for inference memory requirements.
 
 ### Training
 
-TODO: Explain how training is much much more costly than inference. How we focus on SFT which is how train base language model, but RLHF is another important step, but one we ignore today. How need to store model states and activation memory, what each of them is and how much they contribute. Explain two major optimizations used during training: mixed-precision training and activation checkpointing. Explain how tradeoffs they incur wrt training time, memory usage and performance. Explain how batch size plays a role, and trick with gradient accumulation to simulate larger batch size. Lastly, what does this mean in total for training memory requirements.
+TODO: Explain how training is much much more costly than inference. How we focus on SFT which is how train base language model, but RLHF is another important step, but one we ignore today. How need to store model states and activation memory, what each of them is and how much they contribute. Explain the major optimizations used during training: flash attention, mixed-precision training and activation checkpointing. Explain how tradeoffs they incur wrt training time, memory usage and performance. Explain how batch size plays a role, and trick with gradient accumulation to simulate larger batch size. Lastly, what does this mean in total for training memory requirements.
+
+[FlashAttention](https://arxiv.org/pdf/2205.14135) more efficiently moves around data on the GPU leading to a linear and not quadratic memory compexity with respect to sequence length.
 
 ### Fine-tuning
 
