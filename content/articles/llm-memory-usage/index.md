@@ -56,7 +56,7 @@ However we don't just load an model into memory and then do nothing. Either we a
 
 ### Inference
 
-Inference is when the model generates text given some input (called a prompt). LLMs can only generate a fixed amount of text. The limit, known as the context window, is set during training and is a limit on the combined number of input and output tokens. For example, [GPT-3](https://arxiv.org/pdf/2005.14165) has a context window of 2048, so the prompt and the output combined can never exceed 2048 tokens. In its simplest form, inference is when the LLM generates the next token by performing a forward pass over all previously generated tokens. Imagine I provide the model with the prompt `<bos> Hi`, you could imagine the following output at each step:
+Inference is when the model generates text given some input (called a prompt). LLMs can only generate a fixed amount of text. The limit, known as the context window, is set during training and is a limit on the combined number of input and output tokens. For example, [GPT-3](https://arxiv.org/pdf/2005.14165) has a context window of 2048, so the prompt and the output combined can never exceed 2048 tokens. In its simplest form, inference is when the LLM generates the next token by performing a forward pass over all previously generated tokens. Imagine I provide the model with the prompt `<bos> Hi`, you could imagine the following step by step output:
 
 {{< center-table>}}
 
@@ -74,25 +74,36 @@ At each step, the inputs only differ by the last token. Therefore we are computi
 
 #### KV-Caching
 
-To speed things up, we use a cache to store attention keys and values (refer to [Attention Mechanism](https://huggingface.co/blog/not-lain/tensor-dims) for more details). Known as [KV-Caching](https://huggingface.co/blog/not-lain/kv-caching), this leads to a linear time complexity with respect to sequence length at the expense of growing memory linearly. As the size of the cache depends on the structure of the attention layers, estimating the cache size in GB is model dependent. To complicate things further, libraries like [vLLM](https://docs.vllm.ai/en/latest/configuration/optimization.html) allow you to specify GPU memory utilization, and then it scales the KV-cache size up or down based on its allocation of VRAM. If you want to serve more than one user at once, then you need to batch the inputs, so doubling the batch size also doubles the KV-cache. If you know ahead of time what model you plan to use, then this [KV Cache Memory Calculator](https://bentoml.com/llm/inference-optimization/kv-cache-offloading#how-to-calculate-the-kv-cache-size) will spit out the memory consumption of the cache.
+To speed things up, we use a cache to store attention keys and values (refer to [Attention Mechanism](https://huggingface.co/blog/not-lain/tensor-dims) for more details). Known as [KV-Caching](https://huggingface.co/blog/not-lain/kv-caching), this leads to a linear time complexity with respect to sequence length at the expense of growing memory linearly. As the size of the cache depends on the structure of the attention layers, estimating the cache size in GB is dependent on the model architecture. To complicate things further, libraries like [vLLM](https://docs.vllm.ai/en/latest/configuration/optimization.html) allow you to specify GPU memory utilization, and then it scales the KV-cache size up or down based on its allocation of VRAM. If you want to serve more than one user at once, then you need to batch the inputs, so doubling the batch size also doubles the KV-cache. This [KV Cache Memory Calculator](https://bentoml.com/llm/inference-optimization/kv-cache-offloading#how-to-calculate-the-kv-cache-size) walks you through the estimation, as does the approximation:
+
+$$\text{KV Cache Size (GB)} = $$
+
+$$2 \cdot \text{Batch Size} \cdot \text{Sequence Length} \cdot \text{Num Layers}$$
+
+$$\cdot \text{ Hidden Dim} \cdot \text{Bytes per Parameter} \cdot 10^{-9}$$
+
+Note that we also need to store our activations during the forward pass, but this uses negligible memory compared to the KV-cache.
 
 #### Quantization
 
 Post-training quantization reduces memory consumption by storing (some subset of) the weights, activations and KV-cache using fewer bits. This is done by mapping the original weights in fp32/bf16/fp16 to a smaller data type like int8/fp8/int4 without losing too much performance. The quantized data types, as their names suggest, are integers or floats stored in 8-bit or 4-bit representations. Without going into details on how this is done (refer to [Selecting a quantization method](https://huggingface.co/docs/transformers/v4.56.2/quantization/selecting) and [Quantization concepts](https://huggingface.co/docs/transformers/v4.56.2/quantization/concept_guide) for those interested), quantization can reduce memory usage by a factor of 2 to 4 with minimal drop in accuracy.
 
-#### Summary
+#### Putting it all together
 
-Therefore inference requires anywhere from 0.5 - 2 GB of VRAM per billion parameters to load the weights plus the memory for the KV-cache.
+In short, inference requires anywhere from 0.5 - 4 GB of VRAM per billion parameters to load the weights plus some memory to store the KV-cache. Let's imagine we want to deploy [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct), how much memory would we need?
 
-TODO: Go through the example with [Qwen2.5-7B](https://huggingface.co/Qwen/Qwen2.5-7B) to be able to give ballpark figures for super optimized quantized unsloth implementation vs more naive vLLM. 
+This model has 7.62B parameters in bf16, so loading the weights takes `7.62 * 2 = 15.24 GB`. The model supports up to a 128K context window, buts lets set it to a more reasonable `4096` tokens and assume a batch size of 1. The weights requires 2 bytes per parameter and the number of layers and hidden dimension can be read out from the models [config.json](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct/blob/main/config.json). The KV-cache size can then be estimated using the above formula:
 
-TODO: Explain how inference is generating text starting from an input sequence (prompt). Next how this introduces a dependency on the sequence length. Next how flash attention and kv-cache optimize memory usage and speed. Next how can use quantization to further reduce memory requirement. Lastly, what does this mean in total for inference memory requirements.
+$$2 \cdot 1 \cdot 4096 \cdot 28 \cdot 3584 \cdot 2 \cdot 10^{-9} \approx 1.64 \text{GB}$$
+
+Quantizing everything to 4-bit precision would divide both these values by 4.
+
+Therefore, performing inference with [Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) serving one user at a time with a 4096 context window requires somewhere between `4.5GB` and `17GB`.
 
 ### Training
 
 TODO: Explain how training is much much more costly than inference. How we focus on SFT which is how train base language model, but RLHF is another important step, but one we ignore today. How need to store model states and activation memory, what each of them is and how much they contribute. Explain the major optimizations used during training: flash attention, mixed-precision training and activation checkpointing. Explain how tradeoffs they incur wrt training time, memory usage and performance. Explain how batch size plays a role, and trick with gradient accumulation to simulate larger batch size. Lastly, what does this mean in total for training memory requirements.
 
-[FlashAttention](https://arxiv.org/pdf/2205.14135) more efficiently moves around data on the GPU leading to a linear and not quadratic memory compexity with respect to sequence length.
 
 ### Fine-tuning
 
@@ -104,6 +115,10 @@ TODO: Explain how fine-tuning can mean additional training or usually now PEFT. 
 So far we have discussed the memory usage of loading the model weights. However when we train our model, we have to store not just the model weights but also activations, gradients, optimizer states. Likewise for inference we also need to store the KV cache.
 
 ### Training
+
+[FlashAttention](https://arxiv.org/pdf/2205.14135) more efficiently moves around data on the GPU leading to a linear and not quadratic memory compexity with respect to sequence length.
+
+https://huggingface.co/blog/train_memory
 
 Training the model means updating the model weights based on the training data. We do a forward pass to get the output for a batch of training examples, compute the loss, then backpropagate to get the gradient of each weight. We then update the weight using a gradient descent algorithm that moves each weight in the direction that minimizes the loss.
 
