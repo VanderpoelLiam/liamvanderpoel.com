@@ -72,7 +72,19 @@ Inference is when the model generates text given some input (called a prompt). L
 
 At each step, the inputs only differ by the last token. Therefore we are computing the same activations (intermediate results of the forward pass) again and again. This inefficiency is particularly bad due to the attention layer, and leads to a quadratic time complexity with respect to sequence length (length of the input tokens) for inference.
 
+#### KV-Caching
+
 To speed things up, we use a cache to store attention keys and values (refer to [Attention Mechanism](https://huggingface.co/blog/not-lain/tensor-dims) for more details). Known as [KV-Caching](https://huggingface.co/blog/not-lain/kv-caching), this leads to a linear time complexity with respect to sequence length at the expense of growing memory linearly. As the size of the cache depends on the structure of the attention layers, estimating the cache size in GB is model dependent. To complicate things further, libraries like [vLLM](https://docs.vllm.ai/en/latest/configuration/optimization.html) allow you to specify GPU memory utilization, and then it scales the KV-cache size up or down based on its allocation of VRAM. If you want to serve more than one user at once, then you need to batch the inputs, so doubling the batch size also doubles the KV-cache. If you know ahead of time what model you plan to use, then this [KV Cache Memory Calculator](https://bentoml.com/llm/inference-optimization/kv-cache-offloading#how-to-calculate-the-kv-cache-size) will spit out the memory consumption of the cache.
+
+#### Quantization
+
+Post-training quantization reduces memory consumption by storing (some subset of) the weights, activations and KV-cache using fewer bits. This is done by mapping the original weights in fp32/bf16/fp16 to a smaller data type like int8/fp8/int4 without losing too much performance. The quantized data types, as their names suggest, are integers or floats stored in 8-bit or 4-bit representations. Without going into details on how this is done (refer to [Selecting a quantization method](https://huggingface.co/docs/transformers/v4.56.2/quantization/selecting) and [Quantization concepts](https://huggingface.co/docs/transformers/v4.56.2/quantization/concept_guide) for those interested), quantization can reduce memory usage by a factor of 2 to 4 with minimal drop in accuracy.
+
+#### Summary
+
+Therefore inference requires anywhere from 0.5 - 2 GB of VRAM per billion parameters to load the weights plus the memory for the KV-cache.
+
+TODO: Go through the example with [Qwen2.5-7B](https://huggingface.co/Qwen/Qwen2.5-7B) to be able to give ballpark figures for super optimized quantized unsloth implementation vs more naive vLLM. 
 
 TODO: Explain how inference is generating text starting from an input sequence (prompt). Next how this introduces a dependency on the sequence length. Next how flash attention and kv-cache optimize memory usage and speed. Next how can use quantization to further reduce memory requirement. Lastly, what does this mean in total for inference memory requirements.
 
@@ -87,16 +99,6 @@ TODO: Explain how training is much much more costly than inference. How we focus
 TODO: Explain how fine-tuning can mean additional training or usually now PEFT. How does llora and qlora work and why require so much less memory. Lastly, what does this mean in total for fine-tuning memory requirements.
 
 <!-- 
-
-### Quantization
-
-Quantization can lower the memory requirement of the weights by storing them using even less bits, usually as int8 or int4. These data types are what their name suggests, integers stored in 8-bit or 4-bit representations. The main idea is to map the original weights in fp32/bf16/fp16 to a much smaller range, without losing to much performance. The two approaches are:
-
-1. Calibration-based quantization
-2. On-the-fly quantization.
-
-With the first approach we need a calibration dataset to help us set the quantized weights, while the second approach directly shrinks the weights but is often less accurate than using a calibration dataset. See [Selecting a quantization method](https://huggingface.co/docs/transformers/v4.56.2/quantization/selecting) and [Quantization concepts](https://huggingface.co/docs/transformers/v4.56.2/quantization/concept_guide) for more details. In short, quantization can give a 2 to 4 times decrease in the memory requirement with minimal drop in accuracy.
-
 ## Training vs Inference
 
 So far we have discussed the memory usage of loading the model weights. However when we train our model, we have to store not just the model weights but also activations, gradients, optimizer states. Likewise for inference we also need to store the KV cache.
