@@ -102,25 +102,25 @@ Therefore, performing inference with [Qwen2.5-7B-Instruct](https://huggingface.c
 
 ### Training
 
+Training is much more memory intensive than inference. By training, we really mean post-training.  Our starting point is a base model that already understands language. Let's also focus on supervised fine-tuning (SFT) as it is the simplest and most commonly used method. See my [Reinforcement Learning from Human Feedback](https://liamvanderpoel.com/articles/rlhf/#unsupervised-pre-training) article for more details on post-training.
+
+In a single training step we update all our model weights based on a batch of training examples. We start by doing a forward pass on our examples to compute the loss, we then backpropagate to get the gradient of loss with respect to each weight. Lastly, we update the weights using a gradient descent algorithm that moves each weight in the direction that minimizes the loss. This is an oversimplification, but is sufficient for us to understand the main contributors to GPU memory usage. That means that for a single training step we need to, of course load the model weights, but additionally store: Forward Activations, Gradients and Optimizer States.
+
+TODO: STARTING HERE
+
+<!-- --------------------------------------------------------- -->
+
 TODO: Explain how training is much much more costly than inference. How we focus on SFT which is how train base language model, but RLHF is another important step, but one we ignore today. How need to store model states and activation memory, what each of them is and how much they contribute. Explain the major optimizations used during training: flash attention, mixed-precision training and activation checkpointing. Explain how tradeoffs they incur wrt training time, memory usage and performance. Explain how batch size plays a role, and trick with gradient accumulation to simulate larger batch size. Lastly, what does this mean in total for training memory requirements.
 
-
-### Fine-tuning
-
-TODO: Explain how fine-tuning can mean additional training or usually now PEFT. How does llora and qlora work and why require so much less memory. Lastly, what does this mean in total for fine-tuning memory requirements.
-
 <!-- 
-## Training vs Inference
-
-So far we have discussed the memory usage of loading the model weights. However when we train our model, we have to store not just the model weights but also activations, gradients, optimizer states. Likewise for inference we also need to store the KV cache.
-
+[Efficient Training on a Single GPU](https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one#anatomy-of-models-memory)
 ### Training
 
 [FlashAttention](https://arxiv.org/pdf/2205.14135) more efficiently moves around data on the GPU leading to a linear and not quadratic memory compexity with respect to sequence length.
 
 https://huggingface.co/blog/train_memory
 
-Training the model means updating the model weights based on the training data. We do a forward pass to get the output for a batch of training examples, compute the loss, then backpropagate to get the gradient of each weight. We then update the weight using a gradient descent algorithm that moves each weight in the direction that minimizes the loss.
+
 
 #### Model states
 
@@ -180,5 +180,10 @@ TODO: add this section
 ### Inference
 
 [KV Caching Explained: Optimizing Transformer Inference Efficiency](https://huggingface.co/blog/not-lain/kv-caching) -->
+
+### Fine-tuning
+
+TODO: Explain how fine-tuning can mean additional training or usually now PEFT. How does llora and qlora work and why require so much less memory. Lastly, what does this mean in total for fine-tuning memory requirements.
+
 
 {{< reflist exclude="wikipedia,https://docs.unsloth.ai/get-started/fine-tuning-llms-guide/lora-hyperparameters-guide#effective-batch-size">}}
