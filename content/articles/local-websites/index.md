@@ -26,7 +26,7 @@ Based on [Self-host a local AI stack](https://tailscale.com/blog/self-host-a-loc
 
 We will install our services using Docker, so follow the instructions at [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/). Don't forget the [Linux post-installation steps for Docker Engine](https://docs.docker.com/engine/install/linux-postinstall/) so that non-root users can run docker. Then check everything is installed with `docker run hello-world` which should output:
 
-```bash
+```shell
 >>> docker run hello-world
 
 Hello from Docker!
@@ -36,7 +36,7 @@ This message shows that your installation appears to be working correctly.
 
 We also need to install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), then restart docker with `sudo systemctl restart docker`. Check that the GPU is working with:
 
-```bash
+```shell
 docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
 ```
 
@@ -44,25 +44,84 @@ docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -
 
 As a quickstart you can run the [run-compose.sh](https://raw.githubusercontent.com/open-webui/open-webui/refs/heads/main/run-compose.sh) script from Open WebUI:
 
-```bash
+```shell
 git clone git@github.com:open-webui/open-webui.git
 cd open-webui/
 chmod +x run-compose.sh
 ./run-compose.sh --enable-gpu
 ```
 
-If everything goes well you should be able to see the Open WebUI web interface at `http://slippery-server.pompous-pufferfish.ts.net:3000/auth`.
+If everything goes well you should be able to see the Open WebUI web interface at `http://slippery-server.pompous-pufferfish.ts.net:3000`.
 
-We want a bit more customization, so instead we write a custom `docker-compose.yml`. First create the folder `/opt/services/` for all our services, as it is a shared location accessible to all users. Then create `local-llm/docker-compose.yaml` containing:
-
-START HERE: The custom docker compose using vLLM.
+We want to be able to customize things, so instead we write a custom `docker-compose.yml`. First create the folder `/opt/services/` for all our services, as it is a shared location accessible to all users. Then create `local-llm/docker-compose.yaml` containing:
 
 ```yaml
-TODO: custom docker compose yaml file
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - "/opt/appdata/apps/ollama:/root/.ollama"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:cuda
+    container_name: openwebui
+    ports:
+      - "3000:8080"
+    volumes:
+      - "/opt/appdata/openwebui/data:/app/backend/data"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  openwebui:
 ```
 
-TODO: tree of `/opt/services/local-llm/` to show full dir structure.
+We now have the structure:
 
+```shell
+/opt/services/local-llm/
+└── docker-compose.yml
+```
+
+and can start the local-llm service with:
+
+```shell
+cd /opt/services/local-llm
+docker compose up -d
+```
+
+and again we should be able to see the Open WebUI interface at `http://slippery-server.pompous-pufferfish.ts.net:3000` and we can debug with `docker compose logs -f`.
+
+### HTTP to HTTPS
+
+Right now nothing is encrypted. To have a TLS certificate for our website navigate to the `DNS` tab in the admin console and turn on both `MagicDNS` and `HTTPS Certificates`. Now if we run:
+
+```shell
+tailscale serve --bg 3000
+```
+
+our website will be made available at `https://slippery-server.pompous-pufferfish.ts.net`. 
+
+Note: This does put `http://slippery-server.pompous-pufferfish.ts.net` in the public ledger, so it is important to state **Do not enable the HTTPS feature if any of your machine names contain sensitive information.** See [Enabling HTTPS](https://tailscale.com/kb/1153/enabling-https) for more details.
 
 <!-- ## Sidetrack on DNS servers
 
@@ -72,7 +131,7 @@ TODO: What is a DNS server, why do we need our own in this case?
 
 Install [Unbound](https://unbound.docs.nlnetlabs.nl/en/latest/getting-started/installation.html). Check that it is running with `systemctl status unbound`, should see something like:
 
-```bash
+```shell
 >>> systemctl status unbound
 ● unbound.service - Unbound DNS server
      Loaded: loaded (/usr/lib/systemd/system/unbound.service; enabled; preset: enabled)
@@ -82,7 +141,7 @@ Install [Unbound](https://unbound.docs.nlnetlabs.nl/en/latest/getting-started/in
 
 Ensure it auto-starts at boot:
 
-```bash
+```shell
 sudo systemctl enable unbound
 ```
 
@@ -90,7 +149,7 @@ START HERE: How to configure this DNS server!!!
 
 Next we need to add update the configuration by adding a new file `etc/unbound/unbound.conf.d/tailscale.conf`:
 
-```bash
+```shell
 server:
     # specify the interface to answer queries from by ip-address.
     interface: 100.286.448.604
