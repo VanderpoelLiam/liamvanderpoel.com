@@ -18,7 +18,7 @@ We can do this using [Tailscale](https://tailscale.com/), [Split DNS](https://ta
 
 ## Setup a local service
 
-We need to first run some service on our ubuntu home server. Let's take the example of running our own ChatGPT like interface based on [Self-host a local AI stack](https://tailscale.com/blog/self-host-a-local-ai-stack). Feel free to skip this section if you already know how to setup a service on your home server. The important point is that when we are done we will have a local LLM service running on `http://localhost:3000/` that is also accessible at `http://slippery-server.pompous-pufferfish.ts.net:3000` from any device in our Tailnet.
+We need to first run some service on our ubuntu home server. Let's take the example of running our own ChatGPT like interface based on [Self-host a local AI stack](https://tailscale.com/blog/self-host-a-local-ai-stack). Feel free to skip this section if you already know how to setup a service on your home server. The important point is that when we are done we will have a local LLM service running on `http://localhost:3000/` that is also accessible at `http://slippery-server.pompous-pufferfish.ts.net:3000/` from any device in our Tailnet.
 
 ### NVIDIA GPU setup
 
@@ -62,11 +62,11 @@ chmod +x run-compose.sh
 ./run-compose.sh --enable-gpu
 ```
 
-We now have Open WebUI running on `http://localhost:3000/` which can be accessed via our local machine with Tailscale running at `http://<server-name>.<tailnet-name>.ts.net:3000/` which in our case is `http://slippery-server.pompous-pufferfish.ts.net:3000`.
+We now have Open WebUI running on `http://localhost:3000/` which can be accessed via our local machine with Tailscale running at `http://<server-name>.<tailnet-name>.ts.net:3000/` which in our case is `http://slippery-server.pompous-pufferfish.ts.net:3000/`.
 
 ## Human-readable domain names
 
-We have now achieved our first goal which is to have remote access any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000`. The next goal is have this site accessible instead at `https://immich.vanderpoel.local`.
+We have now achieved our first goal which is to have remote access any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.local`.
 
 TODO: START HERE - how are we going to have human readable domain names and https
 
