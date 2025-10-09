@@ -66,7 +66,7 @@ We now have Open WebUI running on `http://localhost:3000/` which can be accessed
 
 ## Human-readable domain names
 
-We have now achieved our first goal which is to have remote access any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.local`.
+We have now achieved our first goal which is to have remote access to any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.local`.
 
 TODO: START HERE - how are we going to have human readable domain names and https
 
@@ -136,4 +136,4 @@ See the [unbound.conf](https://unbound.docs.nlnetlabs.nl/en/latest/manpages/unbo
 
 {{< katex >}}
 
-{{< reflist >}}
+{{< reflist exclude="ubuntu.com, nvidia.com, raw.githubusercontent.com, docker.com">}}
