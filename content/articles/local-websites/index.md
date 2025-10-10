@@ -6,11 +6,11 @@ draft: false
 
 ## Motivation
 
-Let's say you have an ubuntu home server that runs some services like Immich, Home Assistant etc. Maybe you also have some internal websites you host. It would be nice if you could access these sites remotely and if they had nice domain names like `immich.vanderpoel.local`, but we don't want expose anything to the public internet. Our goals are therefore:
+Let's say you have an ubuntu home server that runs some services like Immich, Home Assistant etc. Maybe you also have some internal websites you host. It would be nice if you could access these sites remotely and if they had nice domain names like `immich.vanderpoel.internal`, but we don't want expose anything to the public internet. Our goals are therefore:
 
 1. Remotely access any service hosted on our server
 
-2. Access these services via human-readable domain names e.g. `immich.vanderpoel.local`
+2. Access these services via human-readable domain names e.g. `immich.vanderpoel.internal`
 
 3. Do this without exposing these services to the wider internet
 
@@ -66,11 +66,13 @@ We now have Open WebUI running on `http://localhost:3000/` which can be accessed
 
 ## Human-readable domain names
 
-We have now achieved our first goal which is to have remote access to any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.local`.
+We have now achieved our first goal which is to have remote access to any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.internal`.
 
 ### Local DNS Server
 
-The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider (e.g. Cloudflare, Namecheap, ...) and created DNS records that publicly store this mapping `liamvanderpoel.com` to `37.16.9.210` (i.e. the A, AAAA, CNAME records). We would like the same thing to occur inside our Tailnet where `*vanderpoel.local` points to the `slippery-server` machine.
+The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider (e.g. Cloudflare, Namecheap, ...) and created DNS records that publicly store this mapping `liamvanderpoel.com` to `37.16.9.210` (i.e. the A, AAAA, CNAME records). We would like the same thing to occur inside our Tailnet where `*vanderpoel.internal` points to the `slippery-server` machine.
+
+Note: In my first draft of this article I used `vanderpoel.local`, but this can lead to various issues so I changed it. If you want to go down a bit of a rabbit hole see [Why Using a .local Domain for Internal Networks is a Bad Idea](https://thexcursus.org/why-using-a-local-domain-for-internal-networks-is-a-bad-idea/).
 
 Recall our goal is to access our local services hosted on the `slippery-server` machine. This machine likely doesn't have a publicly reachable ip address, so we can't just buy a new domain and point it to our servers ip address. We also probably don't want to have to buy a new domain name each time we add a new server as we only want these machines to be accessible inside our Tailnet. The solution is to run our own local DNS server to map a domain of our choosing to the private ip address of `slippery-server` inside the Tailnet. We can use any domain name we want, but in practice it make sense not to use a domain already in use as this can lead to confusion if say `google.com` gets remapped to point to a service on one of our local machines.
 
@@ -88,7 +90,7 @@ interface=tailscale0
 bind-dynamic
 
 # Local domain
-address=/vanderpoel.local/100.764.629.423
+address=/vanderpoel.internal/100.764.629.423
 ```
 
 The ip address `100.764.629.423` is that of `slippery-server.pompous-pufferfish.ts.net` and can be found under the `Machines` tab in the admin console. Then restart dnsmasq:
@@ -97,24 +99,24 @@ The ip address `100.764.629.423` is that of `slippery-server.pompous-pufferfish.
 sudo systemctl restart dnsmasq
 ```
 
-We then need to setup [Split DNS](https://tailscale.com/learn/why-split-dns) to route anything ending in `vanderpoel.local` to the `slippery-server` machine. This requires adding a custom nameserver under the `DNS` tab in the admin console where the `Nameserver` the ip address of `slippery-server` i.e. `100.764.629.423` and the domain is `vanderpoel.local`:
+We then need to setup [Split DNS](https://tailscale.com/learn/why-split-dns) to route anything ending in `vanderpoel.internal` to the `slippery-server` machine. This requires adding a custom nameserver under the `DNS` tab in the admin console where the `Nameserver` the ip address of `slippery-server` i.e. `100.764.629.423` and the domain is `vanderpoel.internal`:
 
 ![Split DNS setup in Tailscale admin console](split-dns.png)
 
-We can now test our dns by running `dig anything.vanderpoel.local` on any device in our Tailnet and we should see the request get routed to the `100.764.629.423` ip address:
+We can now test our dns by running `dig anything.vanderpoel.internal` on any device in our Tailnet and we should see the request get routed to the `100.764.629.423` ip address:
 
 ```shell
-> dig anything.vanderpoel.local
+> dig anything.vanderpoel.internal
 [...]
 
 ;; ANSWER SECTION:
-anything.vanderpoel.local. 0   IN      A       100.764.629.423
+anything.vanderpoel.internal. 0   IN      A       100.764.629.423
 [...]
 ```
 
 ### Reverse Proxy
 
-TODO: immich.vanderpoel.local pointing to the immich service is due to reverse proxy like caddy, not due to DNS setup
+TODO: immich.vanderpoel.internal pointing to the immich service is due to reverse proxy like caddy, not due to DNS setup
 
 <!-- ### HTTP to HTTPS
 
