@@ -68,7 +68,53 @@ We now have Open WebUI running on `http://localhost:3000/` which can be accessed
 
 We have now achieved our first goal which is to have remote access to any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.local`.
 
-TODO: START HERE - how are we going to have human readable domain names and https
+### Local DNS Server
+
+The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider (e.g. Cloudflare, Namecheap, ...) and created DNS records that publicly store this mapping `liamvanderpoel.com` to `37.16.9.210` (i.e. the A, AAAA, CNAME records). We would like the same thing to occur inside our Tailnet where `*vanderpoel.local` points to the `slippery-server` machine.
+
+Recall our goal is to access our local services hosted on the `slippery-server` machine. This machine likely doesn't have a publicly reachable ip address, so we can't just buy a new domain and point it to our servers ip address. We also probably don't want to have to buy a new domain name each time we add a new server as we only want these machines to be accessible inside our Tailnet. The solution is to run our own local DNS server to map a domain of our choosing to the private ip address of `slippery-server` inside the Tailnet. We can use any domain name we want, but in practice it make sense not to use a domain already in use as this can lead to confusion if say `google.com` gets remapped to point to a service on one of our local machines.
+
+We therefore install [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq) on `slippery-server` (can run on any server inside the Tailnet):
+
+```shell
+sudo apt install dnsmasq
+```
+
+Then configure dnsmasq by running `sudo vim /etc/dnsmasq.conf` and add the lines:
+
+```text
+# Only bind to Tailscale interface
+interface=tailscale0
+bind-dynamic
+
+# Local domain
+address=/vanderpoel.local/100.764.629.423
+```
+
+The ip address `100.764.629.423` is that of `slippery-server.pompous-pufferfish.ts.net` and can be found under the `Machines` tab in the admin console. Then restart dnsmasq:
+
+```shell
+sudo systemctl restart dnsmasq
+```
+
+We then need to setup [Split DNS](https://tailscale.com/learn/why-split-dns) to route anything ending in `vanderpoel.local` to the `slippery-server` machine. This requires adding a custom nameserver under the `DNS` tab in the admin console where the `Nameserver` the ip address of `slippery-server` i.e. `100.764.629.423` and the domain is `vanderpoel.local`:
+
+![Split DNS setup in Tailscale admin console](split-dns.png)
+
+We can now test our dns by running `dig anything.vanderpoel.local` on any device in our Tailnet and we should see the request get routed to the `100.764.629.423` ip address:
+
+```shell
+> dig anything.vanderpoel.local
+[...]
+
+;; ANSWER SECTION:
+anything.vanderpoel.local. 0   IN      A       100.764.629.423
+[...]
+```
+
+### Reverse Proxy
+
+TODO: immich.vanderpoel.local pointing to the immich service is due to reverse proxy like caddy, not due to DNS setup
 
 <!-- ### HTTP to HTTPS
 
@@ -81,58 +127,7 @@ tailscale serve --bg 3000
 and now our service will be made available at `https://slippery-server.pompous-pufferfish.ts.net`.
 
 Note: This does put `http://slippery-server.pompous-pufferfish.ts.net` in the public ledger, so it is important to state **Do not enable the HTTPS feature if any of your machine names contain sensitive information.** See [Enabling HTTPS](https://tailscale.com/kb/1153/enabling-https) for more details.
-
-
-## Pretty names
-
-START HERE: How to have custom domain name for this service so can have `tailscale serve` serve multiple services on the same machine all with nice custom names
-
-
-The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser instead of its actual IP address like `37.16.9.210`. We would like to have the same thing occur for our local services inside our Tailnet, this is where [Split DNS](https://tailscale.com/learn/why-split-dns) comes in. If we are connected to Tailscale and have our own DNS server setup *inside* the tailnet, then we can have it so that anything ending in `.internal.liamvanderpoel.com` gets routed to our internal services.
-
-## Setting up own DNS Server
-
-Install [Unbound](https://unbound.docs.nlnetlabs.nl/en/latest/getting-started/installation.html). Check that it is running with `systemctl status unbound`, should see something like:
-
-```shell
->>> systemctl status unbound
-● unbound.service - Unbound DNS server
-     Loaded: loaded (/usr/lib/systemd/system/unbound.service; enabled; preset: enabled)
-     Active: active (running) since Tue 2025-10-07 20:27:19 UTC; 22min ago
-[...]
-```
-
-Ensure it auto-starts at boot:
-
-```shell
-sudo systemctl enable unbound
-```
-
-START HERE: How to configure this DNS server!!!
-
-Next we need to add update the configuration by adding a new file `/etc/unbound/unbound.conf.d/tailscale.conf`:
-
-TODO: Anonymize this data after get it working
-
-```shell
-server:
-    # Listen to queries from the Tailnet
-    interface: tailscale0
-
-    # Answer queries from the Tailnet
-    access-control: 100.0.0.0/8 allow
-
-
-    # Respond to DNS queries for your custom domain with your Tailnet IP
-    local-zone: "pompous-pufferfish.com." redirect
-    local-data: "pompous-pufferfish.com. IN A server.pompous-pufferfish.ts.net"
-    local-data-ptr: "server.pompous-pufferfish.ts.net pompous-pufferfish.com"
-
-    # send minimal amount of information to upstream servers to enhance privacy
-    qname-minimisation: yes
-```
-
-See the [unbound.conf](https://unbound.docs.nlnetlabs.nl/en/latest/manpages/unbound.conf.html) man page for more details. -->
+-->
 
 {{< katex >}}
 
