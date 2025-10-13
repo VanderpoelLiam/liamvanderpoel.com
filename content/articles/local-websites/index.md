@@ -70,19 +70,21 @@ We have now achieved our first goal which is to have remote access to any servic
 
 ### Local DNS Server
 
-The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider (e.g. Cloudflare, Namecheap, ...) and created DNS records that publicly store this mapping `liamvanderpoel.com` to `37.16.9.210` (i.e. the A, AAAA, CNAME records). We would like the same thing to occur inside our Tailnet where `*vanderpoel.internal` points to the `slippery-server` machine.
+The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider (e.g. Cloudflare, Namecheap, ...) and created DNS records that publicly store this mapping `liamvanderpoel.com` to `37.16.9.210` (i.e. the A, AAAA, CNAME records). We would like the same thing to occur inside our Tailnet where anything ending in `vanderpoel.internal` points to the `slippery-server` machine.
 
-Note: In my first draft of this article I used `vanderpoel.local`, but this can lead to various issues so I changed it. If you want to go down a bit of a rabbit hole see [Why Using a .local Domain for Internal Networks is a Bad Idea](https://thexcursus.org/why-using-a-local-domain-for-internal-networks-is-a-bad-idea/).
+Recall our goal is to access our local services hosted on the `slippery-server` machine. This machine doesn't have a publicly reachable ip address, so we can't just point a domain to our server like I did for my website. Additionally we only need this mapping to work inside our Tailnet, so the solution is to run our own local DNS server. Its only job is to map a domain of our choosing to the private ip address of `slippery-server` inside the Tailnet. We can use any domain name we want[^1], but in practice it make sense not to use a domain already in use.
 
-Recall our goal is to access our local services hosted on the `slippery-server` machine. This machine likely doesn't have a publicly reachable ip address, so we can't just buy a new domain and point it to our servers ip address. We also probably don't want to have to buy a new domain name each time we add a new server as we only want these machines to be accessible inside our Tailnet. The solution is to run our own local DNS server to map a domain of our choosing to the private ip address of `slippery-server` inside the Tailnet. We can use any domain name we want, but in practice it make sense not to use a domain already in use as this can lead to confusion if say `google.com` gets remapped to point to a service on one of our local machines.
+[^1]: This is not quite right, there are actually some restrictions. In my first draft of this article I used `vanderpoel.local` instead of `vanderpoel.internal` but read that `.local` domains can cause issues down the line (see [Why Using a .local Domain for Internal Networks is a Bad Idea](https://thexcursus.org/why-using-a-local-domain-for-internal-networks-is-a-bad-idea/)).
 
-We therefore install [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq) on `slippery-server` (can run on any server inside the Tailnet):
+We therefore install [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq) on `slippery-server`[^2]:
+
+[^2]: The local DNS server can be installed on any machine inside the Tailnet, it should just be a machine that is always running.
 
 ```shell
 sudo apt install dnsmasq
 ```
 
-Then configure dnsmasq by running `sudo vim /etc/dnsmasq.conf` and add the lines:
+Then run `sudo vim /etc/dnsmasq.conf` and add the lines:
 
 ```text
 # Only bind to Tailscale interface
@@ -93,13 +95,15 @@ bind-dynamic
 address=/vanderpoel.internal/100.764.629.423
 ```
 
-The ip address `100.764.629.423` is that of `slippery-server.pompous-pufferfish.ts.net` and can be found under the `Machines` tab in the admin console. Then restart dnsmasq:
+The ip address `100.764.629.423` is that of `slippery-server.pompous-pufferfish.ts.net` and can be found under the `Machines` tab in the admin console.
+
+Finally restart dnsmasq:
 
 ```shell
 sudo systemctl restart dnsmasq
 ```
 
-We then need to setup [Split DNS](https://tailscale.com/learn/why-split-dns) to route anything ending in `vanderpoel.internal` to the `slippery-server` machine. This requires adding a custom nameserver under the `DNS` tab in the admin console where the `Nameserver` the ip address of `slippery-server` i.e. `100.764.629.423` and the domain is `vanderpoel.internal`:
+We then need to setup [Split DNS](https://tailscale.com/learn/why-split-dns) to route anything ending in `vanderpoel.internal` to the `slippery-server` machine. This requires adding a custom nameserver under the `DNS` tab in the admin console. Add the ip address of `slippery-server` i.e. `100.764.629.423` to the `Nameserver` field and add the domain to the `Domain` field i.e. `vanderpoel.internal`. It should look like:
 
 ![Split DNS setup in Tailscale admin console](split-dns.png)
 
@@ -115,6 +119,32 @@ anything.vanderpoel.internal. 0   IN      A       100.764.629.423
 ```
 
 ### Reverse Proxy
+
+TODO: What is a reverse proxy and why is it needed.
+
+First install [caddy](https://wiki.archlinux.org/title/Caddy):
+
+```shell
+sudo apt install caddy
+```
+
+We now want to route `https://chat.vanderpoel.internal` to `http://localhost:3000/`. So we edit the caddy file with `sudo vim /etc/caddy/Caddyfile` and add the lines:
+
+```text
+chat.vanderpoel.internal {
+    reverse_proxy slippery-server.pompous-pufferfish.ts.net:3000
+    tls internal
+}
+```
+
+Lastly restart caddy:
+
+```shell
+sudo systemctl restart caddy
+```
+
+Now from any machine connected to our Tailnet, typing `https://chat.vanderpoel.internal` in our browser should bring us the Open WebUI web interface!
+
 
 TODO: immich.vanderpoel.internal pointing to the immich service is due to reverse proxy like caddy, not due to DNS setup
 
