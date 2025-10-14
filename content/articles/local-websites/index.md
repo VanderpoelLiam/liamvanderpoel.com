@@ -18,20 +18,7 @@ We can do this using [Tailscale](https://tailscale.com/), [Split DNS](https://ta
 
 ## Setup a local service
 
-We need to first run some service on our ubuntu home server. Let's take the example of running our own ChatGPT like interface based on [Self-host a local AI stack](https://tailscale.com/blog/self-host-a-local-ai-stack). Feel free to skip this section if you already know how to setup a service on your home server. The important point is that when we are done we will have a local LLM service running on `http://localhost:3000/` that is also accessible at `http://slippery-server.pompous-pufferfish.ts.net:3000/` from any device in our Tailnet.
-
-### NVIDIA GPU setup
-
-Follow the [Ubuntu Server documentation](https://documentation.ubuntu.com/server/how-to/graphics/install-nvidia-drivers/index.html) to install the necessary drivers. We also need to install CUDA per [the NVIDIA documentation](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/contents.html) (we selected the proprietary kernel module flavor). An important post-installation step is:
-
-```shell
-sudo tee /etc/profile.d/cuda.sh > /dev/null <<'EOF'
-export PATH=/usr/local/cuda-12.9/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda-12.9/lib64:$LD_LIBRARY_PATH
-EOF
-
-sudo chmod +x /etc/profile.d/cuda.sh
-```
+We need to first run some service on our ubuntu home server. Feel free to skip this section if you already have a service setup on your home server. The important point is that when we are done we will have a service running on `http://localhost:8080/` that is also accessible at `http://slippery-server.pompous-pufferfish.ts.net:8080/` from any device in our Tailnet.
 
 ### Docker install
 
@@ -45,28 +32,83 @@ This message shows that your installation appears to be working correctly.
 [...]
 ```
 
-We also need to install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), then restart docker with `sudo systemctl restart docker`. You can check that the GPU is working inside docker with:
+We can then run our dummy service [whoami](https://github.com/traefik/whoami) with:
 
 ```shell
-docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
+docker run -d -p 8080:80 traefik/whoami
 ```
 
-### Running a Local ChatGPT Interface
-
-For the purposes of this tutorial, you can use the [run-compose.sh](https://raw.githubusercontent.com/open-webui/open-webui/refs/heads/main/run-compose.sh) script from Open WebUI:
-
-```shell
-git clone git@github.com:open-webui/open-webui.git
-cd open-webui/
-chmod +x run-compose.sh
-./run-compose.sh --enable-gpu
-```
-
-We now have Open WebUI running on `http://localhost:3000/` which can be accessed via our local machine with Tailscale running at `http://<server-name>.<tailnet-name>.ts.net:3000/` which in our case is `http://slippery-server.pompous-pufferfish.ts.net:3000/`.
+We now have a webserver that prints OS information and HTTP request to output running on `http://localhost:8080/` which can be accessed via our local machine with Tailscale running at `http://<server-name>.<tailnet-name>.ts.net:8080/` which in our case is `http://slippery-server.pompous-pufferfish.ts.net:8080/`.
 
 ## Human-readable domain names
 
-We have now achieved our first goal which is to have remote access to any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.internal`.
+### Local DNS Server
+
+The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider (e.g. Cloudflare, Namecheap, ...) and created DNS records that publicly store this mapping `liamvanderpoel.com` to `37.16.9.210` (i.e. the A, AAAA, CNAME records). We would like the same thing to occur inside our Tailnet where anything ending in `vanderpoel.internal` points to the `slippery-server` machine.
+
+Recall our goal is to access our local services hosted on the `slippery-server` machine. We certainly can just buy another domain, and point it to the internal Tailscale ip address of `slippery-server`. But as we only need this DNS resolution to work locally inside our Tailnet, we can instead run our own DNS server who's job is to map a domain of our choosing to the Tailscale ip address of `slippery-server`. We can use any domain name we want[^1], but in practice it make sense not to use a domain already in use.
+
+[^1]: This is not quite right, there are actually some restrictions. In my first draft of this article I used `vanderpoel.local` instead of `vanderpoel.internal` but read that `.local` domains can cause issues down the line (see [Why Using a .local Domain for Internal Networks is a Bad Idea](https://thexcursus.org/why-using-a-local-domain-for-internal-networks-is-a-bad-idea/)).
+
+We therefore install [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq) on `slippery-server`[^2]. A pre-installation step however is to disable the stub DNS server run by systemd-resolved, otherwise you run into the error `failed to create listening socket for port 53: Address already in use`. Following [this guide](https://www.turek.dev/posts/disable-systemd-resolved-cleanly/) we run:
+
+```shell
+sudo mkdir -p /etc/systemd/resolved.conf.d/
+echo -e "[Resolve]\nDNSStubListener=no" | sudo tee /etc/systemd/resolved.conf.d/disable-stub.conf
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+sudo systemctl restart systemd-resolved
+```
+
+[^2]: The local DNS server can be installed on any machine inside the Tailnet, it should just be a machine that is always running.
+
+
+You should now not see anything running on port `53` with `sudo lsof -i :53`. We can now install [dnsmasq](https://wiki.archlinux.org/title/Dnsmasq):
+
+```shell
+sudo apt install dnsmasq
+```
+
+Then run `sudo vim /etc/dnsmasq.conf` and add the lines:
+
+```text
+# Local domain
+address=/vanderpoel.internal/100.764.629.423
+```
+
+The ip address `100.764.629.423` is that of `slippery-server.pompous-pufferfish.ts.net` and can be found under the `Machines` tab in the admin console.
+
+Finally restart dnsmasq:
+
+```shell
+sudo systemctl restart dnsmasq
+```
+
+If you get the error `Failed to set DNS configuration: Link lo is loopback device.` then edit the file `/etc/default/dnsmasq` and uncomment the lines:
+
+```shell
+IGNORE_RESOLVCONF=yes
+DNSMASQ_EXCEPT="lo"
+```
+
+and restarting dnsmasq should resolve the issue.
+
+TODO: This does not work do not get expected output:
+
+```shell
+> dig anything.vanderpoel.internal
+[...]
+
+;; ANSWER SECTION:
+anything.vanderpoel.internal. 0   IN      A       100.764.629.423
+[...]
+```
+
+### Reverse Proxy
+
+TODO: What is a reverse proxy and why is it needed.
+
+
+<!-- We have now achieved our first goal which is to have remote access to any service hosted on `slippery-server`. In our case we have Open WebUI running at `http://slippery-server.pompous-pufferfish.ts.net:3000/`. The next goal is have this site accessible instead at `https://immich.vanderpoel.internal`.
 
 ### Local DNS Server
 
@@ -146,7 +188,7 @@ sudo systemctl restart caddy
 Now from any machine connected to our Tailnet, typing `https://chat.vanderpoel.internal` in our browser should bring us the Open WebUI web interface!
 
 
-TODO: immich.vanderpoel.internal pointing to the immich service is due to reverse proxy like caddy, not due to DNS setup
+TODO: immich.vanderpoel.internal pointing to the immich service is due to reverse proxy like caddy, not due to DNS setup -->
 
 <!-- ### HTTP to HTTPS
 
@@ -163,4 +205,4 @@ Note: This does put `http://slippery-server.pompous-pufferfish.ts.net` in the pu
 
 {{< katex >}}
 
-{{< reflist exclude="ubuntu.com, nvidia.com, raw.githubusercontent.com, docker.com">}}
+{{< reflist exclude="ubuntu.com, nvidia.com, raw.githubusercontent.com, docker.com, turek.dev">}}
