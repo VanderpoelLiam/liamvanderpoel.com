@@ -28,7 +28,7 @@ We will also need a domain name. In this tutorial, we'll use the domain `kelp.xy
 
 ## Setup a local service
 
-We first need to run some service on our server. Feel free to skip this section if you already have all your services setup. We just need something running for this tutorial, so we pick the dummy webserver [whoami](https://github.com/traefik/whoami) which will run on port `8080`.
+We first need to run some service on our server. Feel free to skip this section if you already have all your services setup. We just need something running for this tutorial, so I picked the dummy webserver [whoami](https://github.com/traefik/whoami) which will run on port `8080`.
 
 ### Docker install
 
@@ -56,7 +56,9 @@ We now have a webserver that prints OS information and HTTP request to output ru
 
 ### Local DNS Server
 
-At this point I want to quickly explain the [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol. DNS is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider and created DNS records that publicly store the mapping `liamvanderpoel.com` to `37.16.9.210`. We would like the same thing to occur inside our Tailnet and our local network, where any request ending in `internal.kelp.xyz` gets routed to the `slippery-server` machine. This requires running our own local DNS server.
+The [Domain Name System (DNS)](https://aws.amazon.com/route53/what-is-dns/) protocol is how we can type `liamvanderpoel.com` into our browser and be routed to the actual IP address where my website is hosted e.g. `37.16.9.210`. This occurs because after I bought my domain name I went to my DNS provider and created DNS records that publicly store the mapping `liamvanderpoel.com` to `37.16.9.210`. We would like the same thing to occur inside both our Tailnet and our local network, where any request ending in `internal.kelp.xyz` gets routed to the `slippery-server` machine. I achieve this by running my own local DNS server[^2].
+
+[^2]: If you want to instead use a public DNS server I recommend following ideas from [Easy, quick and free valid SSL certificates for your homelab](https://notthebe.ee/blog/easy-ssl-in-homelab-dns01/) and [Remotely access and share your self-hosted services](https://www.youtube.com/watch?v=Vt4PDUXB_fg&t=393s).
 
 #### Pi-hole
 
@@ -66,9 +68,11 @@ There are a few options for a local DNS server. If you are already running a [Pi
 address=/internal.kelp.xyz/192.168.0.123
 ```
 
-where `192.168.0.123` is the local ip address of `slippery-server` machine. In the Pi-hole admin console under `Settings` > `All Settings` > `Misc` enable the setting `misc.etc_dnsmasq_d`. The add the above line to `misc.dnsmasq_lines`. Save and Apply the changes. We now have whenever our Pi-hole gets a request ending in `internal.kelp.xyz` it will route it to the `slippery-server` machine.
+where `192.168.0.123` is the local ip address of `slippery-server` machine. 
 
-Next we need to update the ports used by Pi-hole to avoid conflicts with our reverse proxy. We update the docker compose for Pi-hole to use the `8081` port instead of port `80` for HTTP and then remove the `"443:443/tcp"` line so that the reverse proxy can handle all HTTPS connections:
+In the Pi-hole admin console under `Settings` > `All Settings` > `Misc` enable the setting `misc.etc_dnsmasq_d`. The add the above line to `misc.dnsmasq_lines`. Save and apply the changes. We now have that whenever our Pi-hole gets a request ending in `internal.kelp.xyz` it will route it to the `slippery-server` machine.
+
+Next we update the ports used by Pi-hole to avoid conflicts with our reverse proxy. We update the docker compose for Pi-hole to use the `8081` port instead of port `80` for HTTP and then remove the `"443:443/tcp"` line so that the reverse proxy can handle all HTTPS connections:
 
 ```yml
 ports:
@@ -80,7 +84,7 @@ Then restart the Pi-hole service.
 
 #### Tailscale DNS Settings
 
-Next we need to configure Tailscale to use the DNS server running on the `slippery-server` machine for anything ending in `internal.kelp.xyz`. This requires adding a custom nameserver under the `DNS` tab in the admin console with the ip address of `slippery-server` i.e. `100.764.629.423` to the `Nameserver` field. We now have a decision:
+Next we configure Tailscale to use the DNS server running on the `slippery-server` machine for anything ending in `internal.kelp.xyz`. This requires adding a custom nameserver under the `DNS` tab in the admin console with the Tailscale ip address of `slippery-server` i.e. `100.764.629.423` to the `Nameserver` field. We now have a decision:
 
 Do we want to use the Pi-hole to block ads whenever we connect to our Tailnet?
 
@@ -95,11 +99,11 @@ We can now test our DNS configuration by running `dig anything.internal.kelp.xyz
 192.168.0.123
 ```
 
-We can also verify that in our browser we can additionally access the service at `http:/internal.kelp.xyz:8080/`.
+We can also verify that in our browser we can additionally access the `whoami` service at `http:/internal.kelp.xyz:8080/`.
 
 ### Reverse Proxy
 
-So far we can access any service from any machine on our Tailnet using our custom subdomain `internal.kelp.xyz` if we know the port on which each service is running e.g. `whoami` is running on port `8080`, so we type into our browser `http://internal.kelp.xyz:8080/`. Our goal for this section is no longer need port numbers, but to instead access our services by chaining subdomains e.g. `http://whoami.internal.kelp.xyz`. This is the job of our [Reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) which routes traffic to the specific services depending on their url.
+So far we can access any service from any machine on our Tailnet using our custom subdomain `internal.kelp.xyz` if we know the port on which each service is running e.g. `whoami` is running on port `8080`, so we type into our browser `http://internal.kelp.xyz:8080/`. Our goal for this section is no longer need port numbers, but to instead access our services by chaining subdomains e.g. `http://whoami.internal.kelp.xyz`. This is the job of our [Reverse proxy](https://en.wikipedia.org/wiki/Reverse_proxy) which routes traffic to the specified service depending on the url.
 
 #### Caddy setup
 
@@ -158,9 +162,7 @@ Lastly if we are connected to our local network, we want the ability to connect 
 192.168.0.123
 ```
 
-## Conclusion
-
-We can now access our services with nice domain names and no security warnings! Things work both inside our local network and remotely when connected to Tailscale. One decision I made that I think others may not want to follow is running my own local DNS Server. If you want to instead use a public DNS server I can recommend following ideas from [Easy, quick and free valid SSL certificates for your homelab](https://notthebe.ee/blog/easy-ssl-in-homelab-dns01/) and [Remotely access and share your self-hosted services](https://www.youtube.com/watch?v=Vt4PDUXB_fg&t=393s).
+We can now access our services both inside our local network and remotely when connected to Tailscale!
 
 {{< katex >}}
 
