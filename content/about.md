@@ -6,8 +6,8 @@ draft: false
 
 Hi, I’m Liam.
 
-I write about anything that interest me. Mostly topics related to software.
+I live in Zürich and I write about anything that interests me. Mostly topics related to software.
 
-I like the idea of having my own digital space where I can talk about interesting problems I've encountered and store information I don't want to forget.
+This website serves to document interesting problems I've solved and to preserve information I'd otherwise forget.
 
 {{< author-links >}}
